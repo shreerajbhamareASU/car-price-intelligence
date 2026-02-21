@@ -20,6 +20,8 @@ from __future__ import annotations
 import json
 import os
 import sys
+import warnings
+warnings.filterwarnings("ignore")          # suppress XGBoost GPU/CPU device warnings
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
@@ -74,15 +76,22 @@ def get_price_history(make: str, model: str, year: int) -> list[dict]:
     return history if history else [{"error": f"No price history for {year} {make} {model}"}]
 
 
-def run_forecast(price_history: list[dict]) -> dict:
-    """Run Facebook Prophet on the price series; return 30/90-day forecasts."""
+def run_forecast(make: str, model: str, year: int) -> dict:
+    """
+    Fetch price history from MongoDB then run Facebook Prophet.
+    Accepts make/model/year directly so the LLM doesn't need to pipe
+    raw data between tool calls.
+    """
     try:
         from prophet import Prophet  # lazy import — heavy dep
     except ImportError:
         return {"error": "prophet not installed. Run: pip install prophet"}
 
-    if len(price_history) < 3 or "error" in price_history[0]:
-        return {"error": "Insufficient history for forecast (need ≥ 3 months)"}
+    price_history = get_price_history(make, model, year)
+    if not price_history or "error" in price_history[0]:
+        return {"error": f"No price history for {year} {make} {model}"}
+    if len(price_history) < 3:
+        return {"error": f"Only {len(price_history)} months of data — need >= 3 for forecast"}
 
     df = pd.DataFrame(price_history)
     df["ds"] = pd.to_datetime(df["date"], format="%Y-%m", errors="coerce")
@@ -288,17 +297,15 @@ TOOLS: list[dict] = [
         "type": "function",
         "function": {
             "name": "run_forecast",
-            "description": "Run a Prophet time-series forecast on price history. Returns 30/90-day price forecasts and trend direction.",
+            "description": "Fetch price history from MongoDB and run a Prophet time-series forecast. Returns 30/90-day forecasts and trend direction.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "price_history": {
-                        "type": "array",
-                        "description": "Output from get_price_history — list of {date, avg_price, listing_count}",
-                        "items": {"type": "object"},
-                    },
+                    "make":  {"type": "string",  "description": "Car manufacturer, e.g. 'toyota'"},
+                    "model": {"type": "string",  "description": "Car model, e.g. 'camry'"},
+                    "year":  {"type": "integer", "description": "Model year, e.g. 2018"},
                 },
-                "required": ["price_history"],
+                "required": ["make", "model", "year"],
             },
         },
     },
@@ -468,16 +475,19 @@ def run_agent(user_query: str, max_tool_rounds: int = 10) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows UTF-8 fix
+
     query = (
         sys.argv[1]
         if len(sys.argv) > 1
         else "Should I buy a 2018 Toyota Camry with 45,000 miles in good condition in California?"
     )
-    print(f"\nQuery: {query}\n{'─' * 60}")
+    sep = "-" * 60
+    print(f"\nQuery: {query}\n{sep}")
     result = run_agent(query)
 
     print(f"Recommendation : {result['recommendation']}  ({result['confidence']} confidence)")
     print(f"Predicted price: ${result['predicted_price']:,.0f}")
     print(f"\nExplanation:\n{result['explanation']}")
-    print(f"\n{'─' * 60}\nTool outputs:")
+    print(f"\n{sep}\nTool outputs:")
     print(json.dumps(result["tool_outputs"], indent=2, default=str))
