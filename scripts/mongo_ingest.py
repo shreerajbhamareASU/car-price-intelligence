@@ -2,6 +2,9 @@
 mongo_ingest.py
 Ingest cleaned_cars.csv into MongoDB Atlas — carmarket database.
 Collections: listings, price_snapshots, predictions_cache (TTL)
+
+M0 free-tier fix: drops fat text columns (url, image_url, description,
+region_url, VIN, county, id) — saves ~200 MB, keeps all analytic fields.
 """
 
 import os
@@ -20,16 +23,26 @@ DB_NAME    = "carmarket"
 CSV_PATH   = Path(__file__).parent.parent / "Data" / "cleaned_cars.csv"
 BATCH_SIZE = 5_000                            # rows per insert_many call
 
+# Columns dropped to stay within Atlas M0 512 MB quota.
+# These are large text blobs with no analytic value.
+DROP_COLS = {"id", "url", "region_url", "image_url", "description", "vin", "county"}
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def load_csv(path: Path) -> list[dict]:
     df = pd.read_csv(path, low_memory=False)
     df.columns = df.columns.str.strip().str.lower()
+
+    # Drop fat columns that blow the 512 MB M0 quota
+    to_drop = [c for c in df.columns if c in DROP_COLS]
+    df = df.drop(columns=to_drop)
+    print(f"  Dropped columns: {to_drop}")
+    print(f"  Kept columns:    {list(df.columns)}")
+
     # Rename 'manufacturer' -> 'make' for cleaner document keys
     df = df.rename(columns={"manufacturer": "make"})
     # Replace NaN with None so pymongo stores null, not 'nan'
     df = df.where(pd.notna(df), None)
-    now = datetime.now(timezone.utc)
-    df["ingested_at"] = now
+    df["ingested_at"] = datetime.now(timezone.utc)
     return df.to_dict("records")
 
 
@@ -47,6 +60,7 @@ def main() -> None:
     listings_col = db["listings"]
     listings_col.drop()                       # idempotent re-run: fresh load
 
+    print(f"Loading {CSV_PATH.name} …")
     docs = load_csv(CSV_PATH)
     print(f"Loaded {len(docs):,} rows from {CSV_PATH.name}")
 
@@ -113,6 +127,16 @@ def main() -> None:
     print("\n=== Collection counts ===")
     for name in ["listings", "price_snapshots", "predictions_cache"]:
         print(f"  {name:<22} {db[name].count_documents({}):>8,}")
+
+    # ── 5. Storage usage (M0 quota check) ────────────────────────────────────
+    stats = db.command("dbStats", scale=1_048_576)   # scale to MB
+    used_mb  = stats.get("dataSize", 0) + stats.get("indexSize", 0)
+    print(f"\n=== Atlas storage ===")
+    print(f"  Data:    {stats.get('dataSize', 0):.1f} MB")
+    print(f"  Indexes: {stats.get('indexSize', 0):.1f} MB")
+    print(f"  Total:   {used_mb:.1f} MB  /  512 MB (M0 limit)")
+    if used_mb > 460:
+        print("  WARNING: approaching 512 MB quota — consider upgrading to M2 ($9/mo)")
 
     client.close()
 
