@@ -53,6 +53,40 @@ const AGENT_ICONS = {
   EthicsAgent:          Shield,
 }
 
+// Demo vehicles — matched to CAR_CATALOG keys + orchestrator overrides
+const DEMO_VEHICLES = [
+  {
+    make: 'toyota', model: 'camry', year: 2020, mileage: 42000, condition: 'good', region: 'texas',
+    tag: 'MONITOR', tagGrad: 'from-amber-500 to-yellow-600', tagText: 'text-amber-300',
+    label: 'Toyota Camry', desc: 'Stable demand, balanced market conditions',
+    stat: '+0.8% / 90d', emoji: '🚗',
+  },
+  {
+    make: 'honda', model: 'civic', year: 2020, mileage: 55000, condition: 'good', region: 'florida',
+    tag: 'BUY NOW', tagGrad: 'from-emerald-500 to-green-600', tagText: 'text-emerald-300',
+    label: 'Honda Civic', desc: 'Below market median — strong value pick',
+    stat: '−8.3% vs median', emoji: '🏁',
+  },
+  {
+    make: 'ford', model: 'f-150', year: 2019, mileage: 68000, condition: 'good', region: 'texas',
+    tag: 'WAIT', tagGrad: 'from-red-500 to-rose-600', tagText: 'text-red-300',
+    label: 'Ford F-150', desc: 'Truck prices softening nationally',
+    stat: '−3.1% / 90d', emoji: '🛻',
+  },
+  {
+    make: 'jeep', model: 'wrangler', year: 2020, mileage: 45000, condition: 'good', region: 'ohio',
+    tag: 'BUY NOW', tagGrad: 'from-emerald-500 to-green-600', tagText: 'text-emerald-300',
+    label: 'Jeep Wrangler', desc: 'High off-road demand, constrained inventory',
+    stat: '+6.2% / 90d', emoji: '⛰️',
+  },
+  {
+    make: 'bmw', model: '3 series', year: 2020, mileage: 48000, condition: 'good', region: 'new york',
+    tag: 'WAIT', tagGrad: 'from-red-500 to-rose-600', tagText: 'text-red-300',
+    label: 'BMW 3 Series', desc: 'Luxury market softening post rate hike',
+    stat: '−2.8% / 90d', emoji: '🏎️',
+  },
+]
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 function AnimatedNumber({ value }) {
   const [display, setDisplay] = useState(0)
@@ -243,10 +277,11 @@ export default function AnalyzePage() {
   const [form,    setForm]    = useState({
     make: '', model: '', year: '', mileage: 50000, condition: 'good', region: 'california',
   })
-  const [result,  setResult]  = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState(null)
-  const [stage,   setStage]   = useState(0)
+  const [result,       setResult]       = useState(null)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState(null)
+  const [stage,        setStage]        = useState(0)
+  const [pendingDemo,  setPendingDemo]  = useState(null)
 
   useEffect(() => {
     const make = searchParams.get('make')
@@ -263,12 +298,11 @@ export default function AnalyzePage() {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  async function analyze() {
-    if (!form.make || !form.model || !form.year) return
+  async function analyzeWith(params) {
     setLoading(true); setError(null); setResult(null); setStage(0)
     const timer = setInterval(() => setStage(s => Math.min(s + 1, ANALYSIS_STAGES.length - 1)), 2200)
     try {
-      const { data } = await getPrediction({ ...form, year: +form.year })
+      const { data } = await getPrediction({ ...params, year: +params.year })
       setResult(data)
     } catch (e) {
       const msg = e.response?.data?.detail || e.response?.data?.error || e.message
@@ -278,6 +312,24 @@ export default function AnalyzePage() {
       setLoading(false)
     }
   }
+
+  function analyze() {
+    if (!form.make || !form.model || !form.year) return
+    analyzeWith(form)
+  }
+
+  function loadDemo(demo) {
+    setForm({ make: demo.make, model: demo.model, year: demo.year, mileage: demo.mileage, condition: demo.condition, region: demo.region })
+    setPendingDemo(demo)
+  }
+
+  // Fire analyzeWith once the form state has been applied from loadDemo
+  useEffect(() => {
+    if (pendingDemo) {
+      setPendingDemo(null)
+      analyzeWith(pendingDemo)
+    }
+  }, [pendingDemo])
 
   // Derived fields — support both new orchestrator format and legacy format
   const finalRec     = result?.final_recommendation || (
@@ -428,6 +480,24 @@ export default function AnalyzePage() {
                 </span>
               )}
             </div>
+
+            {/* Quick demo strip */}
+            {!loading && (
+              <div className="mt-4 flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] text-slate-600 uppercase tracking-widest font-semibold mr-1">Quick demo:</span>
+                {DEMO_VEHICLES.map(demo => (
+                  <button
+                    key={demo.label}
+                    onClick={() => loadDemo(demo)}
+                    className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all"
+                  >
+                    <span>{demo.emoji}</span>
+                    <span>{demo.label}</span>
+                    <span className={`text-[9px] font-bold ${demo.tagText}`}>{demo.tag}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -795,24 +865,54 @@ export default function AnalyzePage() {
           </div>
         )}
 
-        {/* Empty state */}
+        {/* Empty state + Demo quick-select */}
         {!result && !loading && !error && (
-          <div className="mt-20 text-center animate-fade-in">
-            <div className="w-20 h-20 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-5">
-              <Search size={32} className="text-slate-600" />
+          <div className="mt-12 animate-fade-in">
+
+            {/* Heading */}
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-slate-800 border border-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Search size={28} className="text-slate-600" />
+              </div>
+              <h3 className="text-slate-300 font-semibold text-xl">Select a vehicle above — or try a demo</h3>
+              <p className="text-slate-600 text-sm mt-1.5 max-w-md mx-auto">
+                Live demos show BUY NOW · WAIT · MONITOR across different market signals
+              </p>
             </div>
-            <h3 className="text-slate-400 font-semibold text-xl">Select a vehicle to get started</h3>
-            <p className="text-slate-600 text-sm mt-2 max-w-sm mx-auto">
-              The 8-agent pipeline returns BUY NOW / WAIT / MONITOR with confidence gauge,
-              volatility meter, and ethical AI guardrails.
-            </p>
-            <div className="flex items-center justify-center gap-6 mt-6 flex-wrap">
-              {['Tesla Model 3', 'Toyota Camry', 'Honda Civic', 'Ford F-150'].map(v => (
-                <span key={v} className="text-xs text-slate-600 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700">
-                  {v} →
-                </span>
+
+            {/* Demo cards grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-5xl mx-auto">
+              {DEMO_VEHICLES.map(demo => (
+                <button
+                  key={demo.label}
+                  onClick={() => loadDemo(demo)}
+                  className="group text-left bg-slate-800 hover:bg-slate-750 border border-slate-700 hover:border-slate-500 rounded-2xl p-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  {/* Emoji + signal badge */}
+                  <div className="flex items-start justify-between mb-3">
+                    <span className="text-2xl">{demo.emoji}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r ${demo.tagGrad} text-white shadow-sm`}>
+                      {demo.tag}
+                    </span>
+                  </div>
+
+                  {/* Vehicle name */}
+                  <p className="text-white text-sm font-semibold leading-tight">{demo.label}</p>
+                  <p className="text-slate-400 text-[11px] leading-snug mt-1">{demo.desc}</p>
+
+                  {/* Stat + arrow */}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/60">
+                    <span className={`text-[11px] font-bold ${demo.tagText}`}>{demo.stat}</span>
+                    <ChevronRight size={12} className="text-slate-600 group-hover:text-slate-400 transition-colors" />
+                  </div>
+                </button>
               ))}
             </div>
+
+            {/* Footer note */}
+            <p className="text-center text-slate-700 text-xs mt-6">
+              Demo results use pre-built agent logs — real vehicle queries hit the live 8-agent pipeline
+            </p>
           </div>
         )}
 

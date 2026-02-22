@@ -1,10 +1,14 @@
 import { NavLink } from 'react-router-dom'
-import { Car, BarChart3, Cpu, TrendingUp } from 'lucide-react'
+import { Car, BarChart3, Cpu, TrendingUp, Shield, Globe, FileText, BarChart2 } from 'lucide-react'
 
 const links = [
-  { to: '/',       label: 'Analyze',      icon: TrendingUp, end: true },
-  { to: '/market', label: 'Market',       icon: BarChart3,  end: false },
-  { to: '/tech',   label: 'How It Works', icon: Cpu,        end: false },
+  { to: '/',        label: 'Analyze',      icon: TrendingUp, end: true  },
+  { to: '/market',  label: 'Market',       icon: BarChart3,  end: false },
+  { to: '/trends',  label: 'Trends',       icon: BarChart2,  end: false },
+  { to: '/ethics',  label: 'Ethical AI',   icon: Shield,     end: false },
+  { to: '/impact',  label: 'Impact',       icon: Globe,      end: false },
+  { to: '/report',  label: 'AI Report',    icon: FileText,   end: false },
+  { to: '/tech',    label: 'Architecture', icon: Cpu,        end: false },
 ]
 
 export default function Navbar() {
@@ -13,7 +17,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-2.5 group">
+          <NavLink to="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:bg-blue-500 transition-colors">
               <Car size={18} className="text-white" />
             </div>
@@ -25,23 +29,23 @@ export default function Navbar() {
             </span>
           </NavLink>
 
-          {/* Nav links */}
-          <div className="flex items-center gap-1">
+          {/* Nav links — scrollable on small screens */}
+          <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar ml-4">
             {links.map(({ to, label, icon: Icon, end }) => (
               <NavLink
                 key={to}
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  `flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap flex-shrink-0 ${
                     isActive
                       ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`
                 }
               >
-                <Icon size={15} />
-                {label}
+                <Icon size={13} />
+                <span className="hidden md:inline">{label}</span>
               </NavLink>
             ))}
           </div>

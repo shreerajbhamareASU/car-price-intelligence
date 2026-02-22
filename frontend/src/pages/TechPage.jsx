@@ -5,167 +5,254 @@ import {
 } from 'recharts'
 import {
   Database, TrendingUp, Cpu, BarChart2, Scale,
-  CheckCircle2, ArrowRight, Layers, Zap, AlertTriangle,
+  CheckCircle2, Layers, Zap, AlertTriangle,
   BookOpen, Shield, MessageSquare, Eye, Bot, Activity,
+  ArrowRight,
 } from 'lucide-react'
 import { getShapImportance } from '../api'
 
-// ── Multi-agent pipeline ──────────────────────────────────────────────────────
-const PIPELINE = [
-  {
-    Icon: MessageSquare,
-    label: 'User Query',
-    desc:  'Vehicle + params',
-    color: '#64748b',
-    agent: false,
-  },
-  {
-    Icon: Bot,
-    label: 'Orchestrator',
-    desc:  'Coordinates all agents',
-    color: '#6366f1',
-    agent: true,
-  },
-  {
-    Icon: Database,
-    label: 'DataAgent',
-    desc:  'Price history + market ctx',
-    color: '#3b82f6',
-    agent: true,
-  },
-  {
-    Icon: TrendingUp,
-    label: 'TrendAgent',
-    desc:  'Prophet forecast + MA',
-    color: '#8b5cf6',
-    agent: true,
-  },
-  {
-    Icon: Cpu,
-    label: 'ForecastAgent',
-    desc:  'XGBoost + LLM blend',
-    color: '#10b981',
-    agent: true,
-  },
-  {
-    Icon: Activity,
-    label: 'RiskAgent',
-    desc:  'Volatility & uncertainty',
-    color: '#f97316',
-    agent: true,
-  },
-  {
-    Icon: Scale,
-    label: 'DecisionAgent',
-    desc:  '3-rule deterministic engine',
-    color: '#ec4899',
-    agent: true,
-  },
-  {
-    Icon: MessageSquare,
-    label: 'ExplanationAgent',
-    desc:  'GPT-4o-mini reasoning',
-    color: '#a78bfa',
-    agent: true,
-  },
-  {
-    Icon: Shield,
-    label: 'EthicsAgent',
-    desc:  'Transparency + bias audit',
-    color: '#22c55e',
-    agent: true,
-  },
-  {
-    Icon: CheckCircle2,
-    label: 'Report',
-    desc:  'Structured intelligence report',
-    color: '#f59e0b',
-    agent: false,
-  },
+// ── Agent hub-spoke layout data ───────────────────────────────────────────────
+// Agents arranged in a circle around the OrchestratorAgent center
+// Angles: 7 agents evenly spaced, starting from top (270°)
+const AGENT_ANGLE_START = 270
+const NUM_AGENTS = 7
+const AGENTS = [
+  { name: 'DataAgent',           shortName: 'Data',        Icon: Database,      color: '#3b82f6', desc: 'Price history + market context from MongoDB' },
+  { name: 'TrendAnalysisAgent',  shortName: 'Trend',       Icon: TrendingUp,    color: '#8b5cf6', desc: 'Prophet 30/90-day forecast + momentum score' },
+  { name: 'ForecastAgent',       shortName: 'Forecast',    Icon: Cpu,           color: '#10b981', desc: 'XGBoost inference + GPT-4o-mini LLM blend' },
+  { name: 'RiskAssessmentAgent', shortName: 'Risk',        Icon: Activity,      color: '#f97316', desc: 'Volatility index + risk score + uncertainty range' },
+  { name: 'DecisionAgent',       shortName: 'Decision',    Icon: Scale,         color: '#ec4899', desc: 'Three-rule deterministic BUY NOW / WAIT / MONITOR' },
+  { name: 'ExplanationAgent',    shortName: 'Explain',     Icon: MessageSquare, color: '#a78bfa', desc: '3-sentence AI reasoning via GPT-4o-mini' },
+  { name: 'EthicsAgent',         shortName: 'Ethics',      Icon: Shield,        color: '#22c55e', desc: 'Transparency note + bias statement + disclaimer' },
 ]
 
-// ── Decision rules ─────────────────────────────────────────────────────────────
+// Decision rules
 const DECISION_RULES = [
-  {
-    condition: 'change ≤ −3% AND confidence ≥ 75',
-    result: 'WAIT',
-    color: '#ef4444',
-    badge: 'bg-red-500/15 text-red-400 border-red-500/25',
-    desc: 'Price declining with high confidence — waiting saves money.',
-  },
-  {
-    condition: 'change ≥ +2% AND volatility = Low',
-    result: 'BUY NOW',
-    color: '#10b981',
-    badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-    desc: 'Rising prices with stable low-volatility market — buy before prices climb.',
-  },
-  {
-    condition: 'price ≤ −10% vs median AND confidence ≥ 75',
-    result: 'BUY NOW',
-    color: '#10b981',
-    badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-    desc: 'Strong below-market deal — value opportunity regardless of trend direction.',
-  },
-  {
-    condition: 'All other scenarios',
-    result: 'MONITOR',
-    color: '#f59e0b',
-    badge: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
-    desc: 'No strong signal — continue monitoring for a better entry point.',
-  },
+  { cond: 'change ≤ −3% AND confidence ≥ 75', result: 'WAIT',    badge: 'bg-red-500/15 text-red-400 border-red-500/25',     desc: 'Price declining with high confidence.' },
+  { cond: 'change ≥ +2% AND volatility = Low', result: 'BUY NOW', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', desc: 'Rising prices with stable market.' },
+  { cond: 'price ≤ −10% vs median AND conf ≥ 75', result: 'BUY NOW', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', desc: 'Strong below-market deal.' },
+  { cond: 'All other scenarios',              result: 'MONITOR', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/25', desc: 'No strong signal — keep watching.' },
 ]
 
 const MODEL_ROWS = [
-  { label: 'Algorithm',      value: 'XGBoost Regressor' },
-  { label: 'Target',         value: 'log1p(price) → expm1 at inference' },
-  { label: 'Training data',  value: '~262k listings (80% chronological split)' },
-  { label: 'Test data',      value: '~66k listings (most recent 20% by date)' },
-  { label: 'Split method',   value: 'Chronological — zero data leakage' },
-  { label: 'Features',       value: '19 total (car_age, log_odometer, make, model…)' },
+  { label: 'Algorithm',     value: 'XGBoost Regressor' },
+  { label: 'Target',        value: 'log1p(price) → expm1 at inference' },
+  { label: 'Training data', value: '~262k listings (80% chronological split)' },
+  { label: 'Test data',     value: '~66k listings (most recent 20% by date)' },
+  { label: 'Split method',  value: 'Chronological — zero data leakage' },
+  { label: 'Features',      value: '19 total (car_age, log_odometer, make, model…)' },
 ]
 
 const DATA_SOURCES = [
-  { color: '#3b82f6', label: 'Craigslist Dataset',       detail: 'Kaggle · ~426k listings · 26 columns',                   tag: 'Primary'      },
-  { color: '#10b981', label: 'Cleaning Pipeline',        detail: 'Colab T4 · 5-step clean → 328k rows',                    tag: 'Processed'    },
-  { color: '#8b5cf6', label: 'MongoDB Atlas',            detail: 'carmarket DB · listings + price_snapshots · 175 MB',     tag: 'Storage'      },
-  { color: '#f59e0b', label: 'OpenAI GPT-4o-mini',       detail: 'ExplanationAgent · ForecastAgent LLM blend',             tag: 'LLM'          },
-  { color: '#ec4899', label: 'Facebook Prophet',         detail: '30/90-day price forecasting · yearly seasonality',        tag: 'Forecast'     },
-  { color: '#6366f1', label: 'Multi-Agent Orchestrator', detail: '7 modular Python agents · deterministic pipeline',        tag: 'Architecture' },
-  { color: '#22c55e', label: 'EthicsAgent',              detail: 'Transparency notes · bias audit · principled AI layer',   tag: 'Ethics'       },
-  { color: '#64748b', label: 'Dataset Snapshot',         detail: 'Jan 2024 · Static for demo · update on demand',          tag: 'Freshness'    },
+  { color: '#3b82f6', label: 'Craigslist Dataset',        detail: 'Kaggle · ~426k listings · 26 columns',                  tag: 'Primary'      },
+  { color: '#10b981', label: 'Cleaning Pipeline',         detail: 'Colab T4 · 5-step clean → 328k rows',                   tag: 'Processed'    },
+  { color: '#8b5cf6', label: 'MongoDB Atlas',             detail: 'carmarket DB · listings + price_snapshots · 175 MB',    tag: 'Storage'      },
+  { color: '#f59e0b', label: 'OpenAI GPT-4o-mini',        detail: 'ExplanationAgent + ForecastAgent LLM blend',            tag: 'LLM'          },
+  { color: '#ec4899', label: 'Facebook Prophet',          detail: '30/90-day price forecasting · yearly seasonality',       tag: 'Forecast'     },
+  { color: '#6366f1', label: 'Multi-Agent Orchestrator',  detail: '7 modular Python agents · deterministic pipeline',       tag: 'Architecture' },
+  { color: '#22c55e', label: 'EthicsAgent',               detail: 'Transparency notes · bias audit · principled AI layer',  tag: 'Ethics'       },
+  { color: '#64748b', label: 'Dataset Snapshot',          detail: 'Jan 2024 · Static for demo · update on demand',         tag: 'Freshness'    },
 ]
 
-const PRINCIPLED_AI = [
-  {
-    icon: Eye,
-    title: 'Transparency',
-    color: '#3b82f6',
-    desc: 'Every recommendation comes with a forecast method label, data quality rating, and confidence score — no black-box outputs.',
-  },
-  {
-    icon: AlertTriangle,
-    title: 'Bias Disclosure',
-    color: '#f59e0b',
-    desc: 'EthicsAgent generates make-specific bias statements disclosing training data limitations for luxury, EV, and niche vehicles.',
-  },
-  {
-    icon: Shield,
-    title: 'Ethical Guardrails',
-    color: '#10b981',
-    desc: 'All outputs include a clear disclaimer: this is data-driven price intelligence, not human financial advice.',
-  },
-  {
-    icon: Zap,
-    title: 'Deterministic Decisions',
-    color: '#ec4899',
-    desc: 'The DecisionAgent uses transparent rule-based logic — not an LLM — so every recommendation can be audited and explained.',
-  },
-]
+// ── Animated Hub-Spoke Architecture Diagram ───────────────────────────────────
+function AgentOrbitDiagram({ activeAgent, setActiveAgent }) {
+  const [tick, setTick] = useState(0)
 
+  // Animate tick for the traveling dots
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => (t + 1) % 100), 50)
+    return () => clearInterval(id)
+  }, [])
+
+  // SVG dimensions
+  const W = 700, H = 420
+  const CX = W / 2, CY = H / 2 - 10
+  const R = 150   // orbit radius
+
+  // Compute agent positions
+  const agentPositions = AGENTS.map((agent, i) => {
+    const angle = (AGENT_ANGLE_START + i * (360 / NUM_AGENTS)) * Math.PI / 180
+    return {
+      ...agent,
+      x: CX + R * Math.cos(angle),
+      y: CY + R * Math.sin(angle),
+    }
+  })
+
+  return (
+    <div className="relative w-full" style={{ aspectRatio: '700/420' }}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-full"
+        style={{ overflow: 'visible' }}
+      >
+        {/* Orbit ring */}
+        <circle cx={CX} cy={CY} r={R}
+          fill="none" stroke="#1e293b" strokeWidth="1" strokeDasharray="4 4" />
+
+        {/* Connection lines + animated dots */}
+        {agentPositions.map((agent, i) => {
+          const isActive = activeAgent === i
+          const progress = ((tick + i * 14) % 100) / 100
+          const dotX     = CX + (agent.x - CX) * progress
+          const dotY     = CY + (agent.y - CY) * progress
+          const retProg  = ((tick + i * 14 + 50) % 100) / 100
+          const retX     = agent.x + (CX - agent.x) * retProg
+          const retY     = agent.y + (CY - agent.y) * retProg
+
+          return (
+            <g key={agent.name}>
+              {/* Connection line */}
+              <line
+                x1={CX} y1={CY} x2={agent.x} y2={agent.y}
+                stroke={isActive ? agent.color : '#334155'}
+                strokeWidth={isActive ? 2 : 1}
+                strokeDasharray={isActive ? 'none' : '6 4'}
+                opacity={isActive ? 1 : 0.6}
+                style={{ transition: 'stroke 0.3s, stroke-width 0.3s' }}
+              />
+              {/* Outbound traveling dot */}
+              <circle cx={dotX} cy={dotY} r={isActive ? 5 : 3}
+                fill={agent.color} opacity={isActive ? 1 : 0.7}>
+                <animate attributeName="opacity"
+                  values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
+              </circle>
+              {/* Return traveling dot */}
+              <circle cx={retX} cy={retY} r={isActive ? 4 : 2.5}
+                fill={agent.color} opacity={0.5} />
+            </g>
+          )
+        })}
+
+        {/* Input node */}
+        <g transform={`translate(${CX - R - 90}, ${CY - 20})`}>
+          <rect x={0} y={0} width={72} height={40} rx={8}
+            fill="#1e293b" stroke="#475569" strokeWidth="1" />
+          <text x={36} y={24} textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600">
+            User Query
+          </text>
+          {/* Arrow to orchestrator */}
+          <line x1={72} y1={20} x2={90} y2={20}
+            stroke="#475569" strokeWidth="1.5"
+            markerEnd="url(#arrowhead)" />
+        </g>
+
+        {/* Output node */}
+        <g transform={`translate(${CX + R + 18}, ${CY - 20})`}>
+          <rect x={0} y={0} width={80} height={40} rx={8}
+            fill="#1e293b" stroke="#475569" strokeWidth="1" />
+          <text x={40} y={16} textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">
+            Structured
+          </text>
+          <text x={40} y={29} textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">
+            Intel Report
+          </text>
+          {/* Arrow from orchestrator */}
+          <line x1={-18} y1={20} x2={0} y2={20}
+            stroke="#475569" strokeWidth="1.5"
+            markerEnd="url(#arrowhead)" />
+        </g>
+
+        {/* Arrow marker def */}
+        <defs>
+          <marker id="arrowhead" markerWidth="6" markerHeight="4"
+            refX="6" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill="#475569" />
+          </marker>
+        </defs>
+
+        {/* Central OrchestratorAgent node */}
+        <g>
+          {/* Outer glow */}
+          <circle cx={CX} cy={CY} r={52} fill="#6366f122" />
+          <circle cx={CX} cy={CY} r={44} fill="#6366f133">
+            <animate attributeName="r" values="44;48;44" dur="3s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.8;1;0.8" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx={CX} cy={CY} r={40} fill="#1e293b" stroke="#6366f1" strokeWidth="2" />
+          <text x={CX} y={CY - 6} textAnchor="middle" fill="#a5b4fc" fontSize="9" fontWeight="700">
+            Orchestrator
+          </text>
+          <text x={CX} y={CY + 8} textAnchor="middle" fill="#818cf8" fontSize="8">
+            Agent
+          </text>
+
+          {/* Spinning ring */}
+          <circle cx={CX} cy={CY} r={54}
+            fill="none" stroke="#6366f144" strokeWidth="1.5"
+            strokeDasharray="8 6">
+            <animateTransform attributeName="transform" type="rotate"
+              from={`0 ${CX} ${CY}`} to={`360 ${CX} ${CY}`}
+              dur="12s" repeatCount="indefinite" />
+          </circle>
+        </g>
+
+        {/* Agent nodes */}
+        {agentPositions.map((agent, i) => {
+          const isActive = activeAgent === i
+          const { Icon } = agent
+
+          return (
+            <g key={agent.name}
+              style={{ cursor: 'pointer' }}
+              onClick={() => setActiveAgent(isActive ? null : i)}>
+
+              {/* Node glow when active */}
+              {isActive && (
+                <circle cx={agent.x} cy={agent.y} r={32}
+                  fill={agent.color + '22'}>
+                  <animate attributeName="r" values="28;34;28" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+              )}
+
+              {/* Node circle */}
+              <circle cx={agent.x} cy={agent.y} r={26}
+                fill={isActive ? agent.color + '33' : '#1e293b'}
+                stroke={agent.color}
+                strokeWidth={isActive ? 2.5 : 1.5}
+                style={{ transition: 'fill 0.3s, stroke-width 0.3s' }}>
+                {!isActive && (
+                  <animate attributeName="opacity"
+                    values="0.85;1;0.85" dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
+                )}
+              </circle>
+
+              {/* Agent label */}
+              <text x={agent.x} y={agent.y + 4}
+                textAnchor="middle"
+                fill={isActive ? 'white' : agent.color}
+                fontSize="9" fontWeight={isActive ? '700' : '600'}>
+                {agent.shortName}
+              </text>
+
+              {/* Pulse dot indicator */}
+              <circle cx={agent.x + 18} cy={agent.y - 18} r={4}
+                fill={agent.color} opacity={isActive ? 1 : 0.6}>
+                <animate attributeName="r" values="3;5;3" dur={`${1.2 + i * 0.15}s`} repeatCount="indefinite" />
+              </circle>
+            </g>
+          )
+        })}
+
+        {/* Pipeline sequence labels at the bottom */}
+        {agentPositions.map((agent, i) => (
+          <text key={agent.name + '_seq'}
+            x={agent.x} y={agent.y + 40}
+            textAnchor="middle"
+            fill="#475569" fontSize="7.5">
+            {i + 1}
+          </text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function TechPage() {
-  const [shap,    setShap]    = useState([])
-  const [loading, setLoading] = useState(true)
+  const [shap,        setShap]        = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [activeAgent, setActiveAgent] = useState(null)
 
   useEffect(() => {
     getShapImportance()
@@ -177,6 +264,8 @@ export default function TechPage() {
     contentStyle: { background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', fontSize: 12 },
     labelStyle:   { color: '#e2e8f0' },
   }
+
+  const selectedAgent = activeAgent !== null ? AGENTS[activeAgent] : null
 
   return (
     <div className="min-h-screen">
@@ -192,56 +281,97 @@ export default function TechPage() {
             System <span className="text-blue-400">Architecture</span>
           </h1>
           <p className="text-slate-400 text-base max-w-2xl">
-            A modular 7-agent decision intelligence pipeline combining XGBoost machine learning,
-            Facebook Prophet time-series forecasting, and GPT-4o-mini — with a dedicated EthicsAgent
-            for transparent, principled AI outputs.
+            A modular 7-agent decision intelligence pipeline. Deterministic Python orchestration
+            with GPT-4o-mini used only where human-level reasoning adds value —
+            never for routing or decision-making.
           </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 mt-8 space-y-8 pb-12">
 
-        {/* ── Multi-Agent Pipeline ── */}
+        {/* ── Animated Hub-Spoke Diagram ── */}
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-1">
             <Layers size={18} className="text-blue-400" />
-            <h2 className="text-xl font-bold text-white">Multi-Agent Pipeline</h2>
+            <h2 className="text-xl font-bold text-white">Multi-Agent Hub Architecture</h2>
             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20 font-semibold ml-1">
-              7 Specialized Agents
+              Live
             </span>
           </div>
-          <p className="text-slate-400 text-sm mb-6">
-            Each query flows through a deterministic Python orchestrator — no LLM routing.
-            GPT-4o-mini is used only in ForecastAgent (blending) and ExplanationAgent (reasoning).
-            Coloured nodes are autonomous agents; grey nodes are I/O endpoints.
+          <p className="text-slate-400 text-sm mb-4">
+            OrchestratorAgent coordinates 7 specialized sub-agents.
+            Click any agent node to explore its role.
           </p>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {PIPELINE.map((step, i) => {
-              const { Icon } = step
-              return (
-                <div key={i} className="flex items-center gap-2">
-                  <div className={`flex flex-col items-center rounded-xl p-3 min-w-[92px] text-center transition-colors
-                    ${step.agent
-                      ? 'bg-slate-900/80 border border-slate-600 hover:border-slate-500'
-                      : 'bg-slate-700/40 border border-slate-700 hover:border-slate-600'}
-                    cursor-default group`}>
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-1.5"
-                      style={{ backgroundColor: step.color + '22' }}>
-                      <Icon size={15} style={{ color: step.color }} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* SVG diagram */}
+            <div className="lg:col-span-2 bg-slate-900/60 border border-slate-700/50 rounded-2xl p-4 overflow-hidden">
+              <AgentOrbitDiagram activeAgent={activeAgent} setActiveAgent={setActiveAgent} />
+            </div>
+
+            {/* Agent details panel */}
+            <div className="space-y-3">
+              {selectedAgent ? (
+                <div className="bg-slate-900/60 border rounded-2xl p-5 transition-all duration-300"
+                  style={{ borderColor: selectedAgent.color + '55' }}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center"
+                      style={{ background: selectedAgent.color + '22' }}>
+                      <selectedAgent.Icon size={22} style={{ color: selectedAgent.color }} />
                     </div>
-                    <p className="text-white text-xs font-semibold leading-tight">{step.label}</p>
-                    <p className="text-slate-600 text-[10px] mt-0.5 leading-tight">{step.desc}</p>
-                    {step.agent && (
-                      <span className="text-[9px] mt-1 px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-500">agent</span>
-                    )}
+                    <div>
+                      <p className="text-white font-bold">{selectedAgent.name}</p>
+                      <p className="text-xs font-bold" style={{ color: selectedAgent.color }}>Agent #{AGENTS.indexOf(selectedAgent) + 1}</p>
+                    </div>
                   </div>
-                  {i < PIPELINE.length - 1 && (
-                    <ArrowRight size={13} className="text-slate-600 flex-shrink-0" />
-                  )}
+                  <p className="text-slate-300 text-sm leading-relaxed">{selectedAgent.desc}</p>
+                  <button onClick={() => setActiveAgent(null)}
+                    className="mt-4 text-xs text-slate-500 hover:text-slate-400 underline">
+                    Deselect
+                  </button>
                 </div>
-              )
-            })}
+              ) : (
+                <div className="bg-slate-900/40 border border-slate-700/40 rounded-2xl p-5">
+                  <p className="text-slate-500 text-sm mb-3">Click an agent to see its role</p>
+                  <div className="space-y-1.5">
+                    {AGENTS.map((a, i) => (
+                      <button key={a.name} onClick={() => setActiveAgent(i)}
+                        className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-slate-800/60 transition-colors text-left">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ background: a.color + '22' }}>
+                          <a.Icon size={10} style={{ color: a.color }} />
+                        </div>
+                        <span className="text-slate-400 text-xs">{a.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pipeline order */}
+              <div className="bg-slate-900/40 border border-slate-700/40 rounded-2xl p-4">
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wide mb-3">Pipeline Order</p>
+                <div className="space-y-1.5">
+                  {[
+                    { step: 'Input',       desc: 'User query', color: '#64748b' },
+                    { step: 'Orchestrate', desc: 'Route + coordinate', color: '#6366f1' },
+                    ...AGENTS.map(a => ({ step: a.shortName, desc: a.desc.split(' + ')[0], color: a.color })),
+                    { step: 'Report',      desc: 'Intelligence brief', color: '#f59e0b' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-700"
+                        style={{ background: item.color + '33', color: item.color }}>
+                        {i}
+                      </div>
+                      <span className="text-xs font-medium" style={{ color: item.color }}>{item.step}</span>
+                      <ArrowRight size={8} className="text-slate-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -256,9 +386,9 @@ export default function TechPage() {
           </div>
           <p className="text-slate-400 text-sm mb-5">
             DecisionAgent applies three ordered rules in pure Python — no LLM, no randomness.
-            Every recommendation can be traced back to exact thresholds.
+            Every recommendation traces to exact numerical thresholds.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {DECISION_RULES.map((r, i) => (
               <div key={i} className="bg-slate-900/60 border border-slate-700 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -269,37 +399,10 @@ export default function TechPage() {
                     {r.result}
                   </span>
                 </div>
-                <p className="text-white text-sm font-mono mb-1.5">{r.condition}</p>
-                <p className="text-slate-500 text-xs leading-relaxed">{r.desc}</p>
+                <p className="text-white text-xs font-mono mb-1.5 leading-relaxed">{r.cond}</p>
+                <p className="text-slate-500 text-xs">{r.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* ── Principled AI Features ── */}
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Shield size={18} className="text-blue-400" />
-            <h2 className="text-xl font-bold text-white">Principled AI Features</h2>
-          </div>
-          <p className="text-slate-400 text-sm mb-5">
-            Built for the Principled AI Spark Challenge — every output includes
-            transparency, bias disclosure, and ethical guardrails.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {PRINCIPLED_AI.map((p, i) => {
-              const { icon: PIcon } = { icon: p.icon }
-              return (
-                <div key={i} className="bg-slate-900/50 border border-slate-700 rounded-xl p-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
-                    style={{ backgroundColor: p.color + '22' }}>
-                    <p.icon size={17} style={{ color: p.color }} />
-                  </div>
-                  <p className="text-white text-sm font-semibold mb-1.5">{p.title}</p>
-                  <p className="text-slate-500 text-xs leading-relaxed">{p.desc}</p>
-                </div>
-              )
-            })}
           </div>
         </div>
 
@@ -327,10 +430,7 @@ export default function TechPage() {
                   <YAxis type="category" dataKey="feature" width={130}
                     tickFormatter={v => v.replace(/_/g, ' ')} tick={{ fontSize: 11, fill: '#cbd5e1' }} />
                   <Tooltip {...chartTooltipStyle}
-                    formatter={(v, _, p) => [
-                      v.toFixed(4),
-                      p.payload.direction === 'positive' ? 'Increases price' : 'Decreases price',
-                    ]}
+                    formatter={(v, _, p) => [v.toFixed(4), p.payload.direction === 'positive' ? 'Increases price' : 'Decreases price']}
                   />
                   <Bar dataKey="importance" radius={[0, 4, 4, 0]}>
                     {shap.map((f, i) => (
@@ -361,7 +461,7 @@ export default function TechPage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-3">
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Zap size={13} className="text-emerald-400" />
