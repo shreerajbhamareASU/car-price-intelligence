@@ -1,6 +1,195 @@
-# car-price-intelligence
+# Car Price Intelligence
 
-Data-driven car price intelligence platform that tracks market trends and predicts the optimal time to buy or wait based on expected price movements.
+> **Principled AI** · Multi-Agent Decision System · Used-Car Market Intelligence
+
+A production-grade, microservice-style car price intelligence platform. Predicts fair market value, generates 30/90-day price forecasts, and issues deterministic **BUY NOW / WAIT / MONITOR** recommendations — powered by a 7-agent orchestration pipeline with Redis caching, Pub/Sub event dispatch, Circuit Breaker protection, and a full React frontend.
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            USER QUERY                                       │
+│                    make · model · year · mileage                            │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │ HTTPS / REST
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│              API GATEWAY  ──  RATE LIMITER                                  │
+│          Token Bucket · 60 req/min per IP · HTTP 429 on breach              │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────┐   ┌─────────────────────────┐
+│           ORCHESTRATOR AGENT                 │──▶│   Circuit Breaker  ⚡   │
+│   State machine · deterministic Python router│   │  CLOSED → OPEN →        │
+│   Coordinates all agent phases               │   │  HALF-OPEN on LLM fail  │
+└──────────────────────────────┬───────────────┘   └─────────────────────────┘
+                               │ dispatch
+                               ▼
+┌──────────────────────────────────────────────┐   ┌─────────────────────────┐
+│           EVENT BUS  (Pub/Sub)               │──▶│   Redis Cache  R        │
+│  Topics: analysis_requested · agent_result   │   │  TTL 30 min             │
+│          pipeline_complete                   │   │  Key: make+model+yr+st  │
+└──────────────────────────────┬───────────────┘   └─────────────────────────┘
+                               │
+          ─────────────────────────────────────────
+           PHASE 1 · SEQUENTIAL
+          ─────────────────────────────────────────
+                               │
+                               ▼
+┌──────────────────────────────────────────────┐   ┌─────────────────────────┐
+│  DataAgent                                   │──▶│  MongoDB Atlas  🍃      │
+│  · Checks Redis cache first (HIT = fast-path)│   │  carmarket DB           │
+│  · Fetches listings + price_snapshots        │◀──│  328k listings          │
+│  · Writes enriched context back to Redis     │   │  61k price snapshots    │
+└──────────────────────────────┬───────────────┘   └─────────────────────────┘
+                               │
+          ─────────────────────────────────────────
+           PHASE 2 · PARALLEL  (×3 simultaneously)
+          ─────────────────────────────────────────
+               ┌───────────────┼──────────────────┐
+               ▼               ▼                  ▼
+┌─────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  TrendAgent     │  │  ForecastAgent   │  │  RiskAgent       │
+│  Prophet model  │  │  XGBoost +       │  │  Volatility idx  │
+│  30/90-day      │  │  GPT-4o-mini     │  │  Uncertainty     │
+│  forecast       │  │  LLM blend       │  │  range + score   │
+│  Yearly         │  │  40/60 · 30/70   │  │  0–100 risk      │
+│  seasonality    │  │  weight blend    │  │  Low/Med/High    │
+└────────┬────────┘  └────────┬─────────┘  └────────┬─────────┘
+         │                    │ Circuit Breaker       │
+         │                    ▼                       │
+         │           ┌────────────────┐               │
+         │           │ OpenAI         │               │
+         │           │ GPT-4o-mini    │               │
+         │           └────────────────┘               │
+         │                    │                       │
+          ─────────────────────────────────────────────
+           PHASE 3 · SEQUENTIAL  (awaits Phase 2)
+          ─────────────────────────────────────────────
+                    └──────────┬────────────────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  DecisionAgent  ·  PHASE 3  ·  NO LLM  ·  Pure Python                     │
+│  Applies 3 deterministic ordered rules → BUY NOW / WAIT / MONITOR         │
+│  Rule 1: price change ≤ −3% AND confidence ≥ 75%  →  WAIT                 │
+│  Rule 2: price change ≥ +2% AND volatility = Low  →  BUY NOW              │
+│  Rule 3: price ≤ −10% vs median AND confidence ≥ 75%  →  BUY NOW          │
+│  Default: MONITOR                                                           │
+└──────────────────────────────┬──────────────────────────────────────────────┘
+                               │
+          ─────────────────────────────────────────
+           PHASE 4 · PARALLEL  (×2 simultaneously)
+          ─────────────────────────────────────────
+                    ┌──────────┴────────────────────┐
+                    ▼                               ▼
+     ┌──────────────────────────┐   ┌───────────────────────────┐
+     │  ExplanationAgent        │   │  EthicsAgent              │
+     │  GPT-4o-mini             │   │  Pure Python              │
+     │  3-sentence AI reasoning │   │  Per-make bias audit      │
+     │  Circuit Breaker-wrapped │   │  Transparency note        │
+     └──────────────┬───────────┘   │  Fairness disclaimer      │
+                    │               └──────────────┬────────────┘
+                    ▼                              │
+           ┌────────────────┐                     │
+           │ OpenAI         │                     │
+           │ GPT-4o-mini    │                     │
+           └────────────────┘                     │
+                    │                              │
+                    └──────────────┬───────────────┘
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       STRUCTURED INTEL REPORT                               │
+│   Signal: BUY NOW / WAIT / MONITOR  ·  Fair Value  ·  30/90-day Forecast   │
+│   Risk Score  ·  Volatility  ·  SHAP Feature Importance                    │
+│   3-sentence Explanation  ·  Ethics & Transparency Note                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Agent Reference
+
+| Agent | Phase | LLM | Responsibility |
+|---|---|---|---|
+| **OrchestratorAgent** | Router | No | State machine that sequences all phases, dispatches via Pub/Sub, aggregates results |
+| **DataAgent** | 1 · Sequential | No | Checks Redis cache → fetches listings + price_snapshots from MongoDB → enriches context |
+| **TrendAnalysisAgent** | 2 · Parallel | No | Facebook Prophet 30-day + 90-day forecasts, yearly seasonality, momentum score |
+| **ForecastAgent** | 2 · Parallel | Yes | XGBoost regressor inference + GPT-4o-mini blend (40/60 or 30/70 weights) |
+| **RiskAssessmentAgent** | 2 · Parallel | No | Volatility index (Low/Moderate/High), sigma-based uncertainty range, 0–100 risk score |
+| **DecisionAgent** | 3 · Sequential | No | Three deterministic Python rules → BUY NOW / WAIT / MONITOR — never calls LLM |
+| **ExplanationAgent** | 4 · Parallel | Yes | GPT-4o-mini generates a 3-sentence plain-English justification of the recommendation |
+| **EthicsAgent** | 4 · Parallel | No | Per-make bias statement, data-freshness disclaimer, principled AI transparency note |
+
+---
+
+## Infrastructure Components
+
+| Component | Role | Detail |
+|---|---|---|
+| **API Gateway** | Single entry point | HTTPS/REST, validates all inbound requests |
+| **Rate Limiter** | Abuse protection | Token bucket · 60 req/min per IP · HTTP 429 on breach |
+| **Circuit Breaker** | LLM fault isolation | CLOSED → OPEN → HALF-OPEN state machine wrapping all GPT-4o-mini calls |
+| **Event Bus (Pub/Sub)** | Agent dispatch | 3 topics: `analysis_requested`, `agent_result`, `pipeline_complete` |
+| **Redis Cache** | Hot-path caching | TTL 30 min · key = `make:model:year:state` hash · HIT skips DataAgent re-fetch |
+| **MongoDB Atlas** | Primary data store | `carmarket` DB · `listings` collection (328k docs) · `price_snapshots` (61k docs) · 175 MB |
+| **OpenAI GPT-4o-mini** | External LLM | Used only in ForecastAgent + ExplanationAgent — never for routing or decisions |
+
+---
+
+## Decision Rules
+
+DecisionAgent applies three ordered deterministic rules in pure Python — zero LLM, zero randomness. Every recommendation traces to exact numerical thresholds.
+
+| Rule | Condition | Signal |
+|---|---|---|
+| 1 | `price_change ≤ −3%` AND `confidence ≥ 75` | **WAIT** — price declining with high confidence |
+| 2 | `price_change ≥ +2%` AND `volatility = Low` | **BUY NOW** — rising prices, stable market |
+| 3 | `listing_price ≤ −10% vs median` AND `confidence ≥ 75` | **BUY NOW** — strong below-market deal |
+| * | All other scenarios | **MONITOR** — no strong signal |
+
+---
+
+## ML Model
+
+| Property | Value |
+|---|---|
+| Algorithm | XGBoost Regressor |
+| Target | `log1p(price)` → `expm1` at inference |
+| Training data | ~262k listings (80% chronological split) |
+| Test data | ~66k listings (most recent 20% by date) |
+| Split method | Chronological — zero data leakage |
+| Features | 19 total: `car_age`, `log_odometer`, `make`, `model`, `condition`, `fuel`, `type`, `state`, `cylinders`, `drive` … |
+
+### Top SHAP Feature Importances
+
+| Rank | Feature | Direction | Importance |
+|---|---|---|---|
+| 1 | `log_odometer` | ↓ decreases price | 0.381 |
+| 2 | `car_age` | ↓ decreases price | 0.294 |
+| 3 | `model` | ↑ increases price | 0.120 |
+| 4 | `make` | ↑ increases price | 0.099 |
+| 5 | `condition` | ↑ increases price | 0.073 |
+| 6 | `fuel` | ↑ increases price | 0.052 |
+| 7 | `type` | ↑ increases price | 0.042 |
+| 8 | `state` | ↑ increases price | 0.031 |
+
+---
+
+## Data Stack
+
+| Source | Detail | Tag |
+|---|---|---|
+| Craigslist Dataset | Kaggle · ~426k listings · 26 columns | Primary |
+| Cleaning Pipeline | Colab T4 · 5-step clean → 328k rows | Processed |
+| MongoDB Atlas | `carmarket` DB · listings + price_snapshots · 175 MB | Storage |
+| OpenAI GPT-4o-mini | ExplanationAgent + ForecastAgent LLM blend | LLM |
+| Facebook Prophet | 30/90-day price forecasting · yearly seasonality | Forecast |
+| Multi-Agent Orchestrator | 7 modular Python agents · deterministic pipeline | Architecture |
+| EthicsAgent | Transparency notes · bias audit · principled AI layer | Ethics |
+| Dataset snapshot | Jan 2024 · static for demo · update on demand | Freshness |
 
 ---
 
@@ -8,179 +197,142 @@ Data-driven car price intelligence platform that tracks market trends and predic
 
 ```
 car-price-intelligence/
+├── backend/
+│   ├── main.py                      # FastAPI app — all API routes
+│   ├── agent.py                     # Legacy single-agent (superseded)
+│   ├── car_catalog.py               # Static make/model catalog (20 makes)
+│   ├── agents/
+│   │   ├── orchestrator.py          # OrchestratorAgent — state machine router
+│   │   ├── data_agent.py            # DataAgent — MongoDB + Redis fetch
+│   │   ├── trend_agent.py           # TrendAnalysisAgent — Prophet forecasts
+│   │   ├── forecast_agent.py        # ForecastAgent — XGBoost + LLM blend
+│   │   ├── risk_agent.py            # RiskAssessmentAgent — volatility + uncertainty
+│   │   ├── decision_agent.py        # DecisionAgent — deterministic 3-rule engine
+│   │   ├── explanation_agent.py     # ExplanationAgent — GPT-4o-mini reasoning
+│   │   └── ethics_agent.py          # EthicsAgent — bias audit + transparency
+│   └── utils/
+│       ├── smoothing.py             # Moving average + EMA helpers
+│       ├── scenario_adjustments.py  # 4 macro scenario multipliers
+│       └── validation.py            # Input validation at API boundary
 │
-├── Data/                        # Raw & cleaned datasets (git-ignored, stored in Drive)
-│   ├── vehicles.csv             # Raw Craigslist used cars (~426k rows, 26 cols)
-│   └── cleaned_cars.csv         # Output of cleaning pipeline
+├── frontend/
+│   └── src/
+│       ├── App.jsx                  # Router + AppContext
+│       ├── api.js                   # Axios wrappers
+│       ├── components/
+│       │   └── MicroserviceFlowDiagram.jsx  # Animated architecture diagram
+│       └── pages/
+│           ├── AnalyzePage.jsx      # Car form → agent pipeline → intel report
+│           ├── MarketTrendsPage.jsx # Market trends, forecasts, segment heatmap
+│           ├── TechPage.jsx         # Architecture diagram + model card + SHAP
+│           ├── PrincipledAIPage.jsx # HITL flow, fairness audit, 4 pillars
+│           ├── DecisionReportPage.jsx # Downloadable report + RadarChart
+│           └── EconomicImpactPage.jsx # Scale calculator + segment explorer
 │
-├── Cleaning/
-│   └── craigslist_cleaning.ipynb  # Colab T4 data-cleaning notebook
-│
-├── notebooks/
-│   └── car_price_model.ipynb    # Colab T4 — feature eng + XGBoost + SHAP
-│
-├── models/                      # Trained artefacts (git-ignored, download from Colab)
-│   ├── car_price_model.pkl      # XGBoost regressor
-│   ├── feature_meta.pkl         # cat_codes + feature_names + geo medians
-│   ├── shap_data.pkl            # TreeExplainer + 500-row sample
-│   └── shap_summary.png         # SHAP bar chart
+├── models/
+│   ├── car_price_model.pkl          # Trained XGBoost regressor
+│   ├── feature_meta.pkl             # Category codes + feature names + geo medians
+│   └── shap_data.pkl                # TreeExplainer + 500-row SHAP sample
 │
 ├── scripts/
-│   ├── mongo_ingest.py          # Ingest cleaned_cars.csv → MongoDB Atlas
-│   └── model_utils.py           # Shared feature eng + predict + explain_prediction()
+│   ├── mongo_ingest.py              # Ingest cleaned_cars.csv → MongoDB Atlas
+│   └── model_utils.py               # predict_price() + explain_prediction()
+│
+├── Cleaning/
+│   └── craigslist_cleaning.ipynb    # Colab T4 — 5-step data cleaning pipeline
+│
+├── notebooks/
+│   └── car_price_model.ipynb        # Colab T4 — feature eng + XGBoost + SHAP
 │
 ├── docs/
-│   └── mongo_setup.md           # Step-by-step Atlas + .env setup guide
+│   └── mongo_setup.md               # Atlas + .env setup guide
 │
-├── backend/
-│   ├── agent.py                 # Tool-calling agent: GPT-4o-mini + 5 tools → BUY/WAIT/NEUTRAL
-│   └── main.py                  # FastAPI: /api/cars /api/predict /api/market-overview /api/shap-importance
-│
-├── frontend/                    # React + Vite + Tailwind + Recharts
-│   ├── src/
-│   │   ├── App.jsx              # Tab nav + AppContext (cross-tab car selection)
-│   │   ├── api.js               # axios wrappers
-│   │   └── components/
-│   │       ├── AnalyzeTab.jsx   # Car form → agent call → recommendation + chart + SHAP
-│   │       ├── MarketOverview.jsx # Metric cards + Best Buys table + seasonality chart
-│   │       └── HowItWorks.jsx   # Pipeline diagram + SHAP chart + model card + sources
-│   └── package.json
-└── .env                         # Local secrets — never committed
+└── .env                             # Local secrets — never committed
 ```
 
 ---
 
-## Task Log
+## API Endpoints
 
-> Tasks are listed in order. Check off each item as it is completed.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/cars` | All makes/models from MongoDB + static catalog fallback |
+| `POST` | `/api/predict` | Full 7-agent pipeline → Intel Report JSON |
+| `GET` | `/api/market-overview` | Market stats, best buys, segment trends |
+| `GET` | `/api/shap-importance` | Global SHAP feature importances |
 
----
+### `POST /api/predict` — Request
 
-### Phase 1 — Data Acquisition & Cleaning
+```json
+{
+  "make": "toyota",
+  "model": "camry",
+  "year": 2019,
+  "odometer": 45000,
+  "condition": "good",
+  "fuel": "gas",
+  "type": "sedan",
+  "state": "ca"
+}
+```
 
-| # | Status | Task | Output | Notes |
-|---|--------|------|--------|-------|
-| 1.1 | ✅ Done | Identify raw dataset | `Data/vehicles.csv` | Craigslist used cars, 426 881 rows × 26 cols |
-| 1.2 | ✅ Done | Write Colab data-cleaning notebook | `Cleaning/craigslist_cleaning.ipynb` | T4-compatible; steps below |
-| 1.3 | ✅ Done | Ingest cleaned data into MongoDB Atlas | `scripts/mongo_ingest.py` | 328,209 listings · 61,721 snapshots · 175 MB / 512 MB used; see `docs/mongo_setup.md` |
+### `POST /api/predict` — Response
 
-#### Cleaning notebook steps (`craigslist_cleaning.ipynb`)
-
-| Step | Status | Description |
-|------|--------|-------------|
-| 1 | ✅ Done | Drop rows where `price < 500` or `price > 150 000` |
-| 2 | ✅ Done | Drop rows where `odometer > 300 000` |
-| 3 | ✅ Done | Parse `posting_date` → `year_month`, `month`, `day_of_week` |
-| 4 | ✅ Done | Keep only top-20 makes by listing count |
-| 5 | ✅ Done | Add `price_per_mile = price / odometer` (NaN on div-by-zero) |
-| 6 | ✅ Done | Print shape + `.describe()` after every step |
-| 7 | ✅ Done | Save `cleaned_cars.csv` to Drive + browser download |
-
----
-
-### Phase 2 — Exploratory Data Analysis
-
-| # | Status | Task | Output | Notes |
-|---|--------|------|--------|-------|
-| 2.1 | ⬜ Todo | Price distribution by make | chart | histogram / box plot |
-| 2.2 | ⬜ Todo | Price vs odometer scatter | chart | colour by make |
-| 2.3 | ⬜ Todo | Listing volume over time | chart | `year_month` time-series |
-| 2.4 | ⬜ Todo | Regional price heatmap | chart | by `state` / `lat`+`long` |
-| 2.5 | ⬜ Todo | Correlation matrix | chart | numeric features |
-
----
-
-### Phase 3 — Feature Engineering
-
-| # | Status | Task | Output | Notes |
-|---|--------|------|--------|-------|
-| 3.1 | ⬜ Todo | Encode categorical columns | feature set | `condition`, `fuel`, `transmission`, `drive` |
-| 3.2 | ⬜ Todo | Handle remaining nulls / imputation | feature set | strategy TBD |
-| 3.3 | ⬜ Todo | Create age feature (`listing_year - year`) | feature set | car age in years |
-| 3.4 | ⬜ Todo | Scale / normalise numeric features | feature set | StandardScaler or MinMax |
+```json
+{
+  "signal": "BUY NOW",
+  "fair_value": 18400,
+  "confidence": 81,
+  "forecast_30d": 18850,
+  "forecast_90d": 19200,
+  "price_change_pct": 2.4,
+  "risk_score": 28,
+  "volatility": "Low",
+  "uncertainty_range": [17200, 19600],
+  "explanation": "This 2019 Camry is priced 9% below the California median for similar mileage...",
+  "ethics_note": "Toyota listings show consistent pricing patterns across regions...",
+  "agent_log": [ ... ]
+}
+```
 
 ---
 
-### Phase 4 — Modelling
-
-| # | Status | Task | Output | Notes |
-|---|--------|------|--------|-------|
-| 4.1 | ✅ Done | Feature engineering | `notebooks/car_price_model.ipynb` Cell 1 | car_age, log_odometer, mileage_per_year, is_luxury, category codes; time-based 80/20 split |
-| 4.2 | ✅ Done | Train XGBoost regressor (T4 GPU) | `models/car_price_model.pkl` | n_estimators=500, lr=0.05, depth=6, early stopping |
-| 4.3 | ✅ Done | Evaluate on original $ scale | metrics | MAE / RMSE / MAPE printed in notebook |
-| 4.4 | ✅ Done | SHAP analysis + explain_prediction() | `models/shap_data.pkl` · `shap_summary.png` | Top-3 contributors per listing; imported by FastAPI |
-| 4.5 | ✅ Done | Shared model utilities | `scripts/model_utils.py` | predict_price() + explain_prediction() for backend |
-| 4.6 | ⬜ Todo | Build "buy now vs wait" signal | signal logic | price trend + model residuals |
-
----
-
-### Phase 5 — Backend
-
-| # | Status | Task | Output | Notes |
-|---|--------|------|--------|-------|
-| 5.1 | ✅ Done | Tool-calling analyst agent | `backend/agent.py` | GPT-4o-mini · 5 tools · BUY/WAIT/NEUTRAL rules |
-| 5.2 | ✅ Done | FastAPI app | `backend/main.py` | /api/cars · /api/predict · /api/market-overview · /api/shap-importance |
-| 5.3 | ⬜ Todo | Unit tests | `backend/tests/` | pytest |
-
----
-
-### Phase 6 — Frontend (React)
-
-| # | Status | Task | Output | Notes |
-|---|--------|------|--------|-------|
-| 6.1 | ✅ Done | Scaffold Vite + React + Tailwind + Recharts | `frontend/` | Vite proxy → :8000 |
-| 6.2 | ✅ Done | Analyze tab | `AnalyzeTab.jsx` | Cascade dropdowns · agent call · SHAP bullets · chart · reasoning steps |
-| 6.3 | ✅ Done | Market Overview tab | `MarketOverview.jsx` | Metric cards · Best Buys table · seasonality heatmap |
-| 6.4 | ✅ Done | How It Works tab | `HowItWorks.jsx` | Pipeline diagram · SHAP chart · model card · data sources |
-| 6.5 | ✅ Done | Cross-tab context | `AppContext` | Click Best Buy row → auto-loads Analyze tab |
-| 6.6 | ⬜ Todo | Deploy (Vercel / Netlify) | live URL | — |
-
----
-
-### Phase 7 — Deployment & DevOps
-
-| # | Status | Task | Output | Notes |
-|---|--------|------|--------|-------|
-| 7.1 | ⬜ Todo | Dockerise backend | `Dockerfile` | — |
-| 7.2 | ⬜ Todo | CI pipeline | `.github/workflows/` | lint + test on PR |
-| 7.3 | ⬜ Todo | Deploy backend (Render / Railway / EC2) | live URL | — |
-| 7.4 | ⬜ Todo | Environment / secrets management | `.env.example` | — |
-
----
-
-## Status Key
-
-| Symbol | Meaning |
-|--------|---------|
-| ✅ Done | Completed and verified |
-| 🔄 In Progress | Actively being worked on |
-| ⬜ Todo | Not started |
-| ❌ Blocked | Waiting on dependency or decision |
-
----
-
-## Quick-Start (local dev)
+## Quick Start
 
 ```bash
 git clone <repo-url>
 cd car-price-intelligence
 
-# 1 — Backend
-pip install fastapi uvicorn motor pymongo python-dotenv openai prophet xgboost shap joblib scikit-learn pandas numpy
+# Backend
+pip install fastapi uvicorn motor pymongo python-dotenv \
+            openai prophet xgboost shap joblib \
+            scikit-learn pandas numpy
 uvicorn backend.main:app --reload --port 8000
 
-# 2 — Frontend (new terminal)
+# Frontend (new terminal)
 cd frontend
 npm install
-npm run dev        # → http://localhost:5173
+npm run dev   # → http://localhost:5173
 ```
 
-Add `.env` to project root:
+`.env` (project root):
+
 ```
-MONGO_URI=mongodb+srv://...
+MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/carmarket
 OPENAI_API_KEY=sk-...
 ```
 
 ---
 
-*Last updated: 2026-02-21 — Phase 1 ✅ · Phase 4 ✅ · Phase 5 ✅ · Phase 6 ✅ (full stack)*
+## Principled AI Design
+
+- **LLM used surgically** — GPT-4o-mini is called only in ForecastAgent (blend) and ExplanationAgent (language). It never controls routing, decisions, or tool selection.
+- **Deterministic decisions** — DecisionAgent applies three auditable Python rules. Every recommendation traces to exact numerical thresholds with no stochastic element.
+- **Bias audit on every response** — EthicsAgent emits a per-make bias statement and data-freshness disclaimer on every single prediction.
+- **Circuit Breaker** — All LLM calls are wrapped in a Circuit Breaker. On repeated failures the system degrades gracefully: XGBoost-only forecast, rule-only decision, templated explanation.
+- **Transparent SHAP** — Global and local SHAP values are surfaced in the UI so users understand exactly what drives each price estimate.
+- **Rate limiting** — API Gateway enforces 60 req/min per IP to prevent abuse and ensure fair access.
+
+---
+
+*Branch: `user/Shreeraj` · Author: shreerajbhamareASU · ASU Hackathon 2026*
