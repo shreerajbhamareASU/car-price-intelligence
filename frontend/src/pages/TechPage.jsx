@@ -26,10 +26,10 @@ const STATIC_SHAP = [
 
 // Decision rules
 const DECISION_RULES = [
-  { cond: 'change ≤ −3% AND confidence ≥ 75', result: 'WAIT',    badge: 'bg-red-500/15 text-red-400 border-red-500/25',     desc: 'Price declining with high confidence.' },
-  { cond: 'change ≥ +2% AND volatility = Low', result: 'BUY NOW', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', desc: 'Rising prices with stable market.' },
-  { cond: 'price ≤ −10% vs median AND conf ≥ 75', result: 'BUY NOW', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', desc: 'Strong below-market deal.' },
-  { cond: 'All other scenarios',              result: 'MONITOR', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/25', desc: 'No strong signal — keep watching.' },
+  { cond: 'change ≤ −3% AND confidence ≥ 75', result: 'WAIT',    badge: 'bg-red-500 text-red-700 border-red-500/25',     desc: 'Price declining with high confidence.' },
+  { cond: 'change ≥ +2% AND volatility = Low', result: 'BUY NOW', badge: 'bg-emerald-600 text-emerald-700 border-emerald-500/25', desc: 'Rising prices with stable market.' },
+  { cond: 'price ≤ −10% vs median AND conf ≥ 75', result: 'BUY NOW', badge: 'bg-emerald-600 text-emerald-700 border-emerald-500/25', desc: 'Strong below-market deal.' },
+  { cond: 'All other scenarios',              result: 'MONITOR', badge: 'bg-amber-500 text-amber-700 border-amber-500', desc: 'No strong signal — keep watching.' },
 ]
 
 const MODEL_ROWS = [
@@ -88,13 +88,13 @@ export default function TechPage() {
           <div className="flex items-center gap-2 mb-1">
             <Layers size={18} className="text-orange-500" />
             <h2 className="text-xl font-bold text-slate-900">Microservice Architecture</h2>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20 font-semibold ml-1">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-600 text-orange-500 border border-orange-600 font-semibold ml-1">
               Animated
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20 font-semibold">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-violet-600 text-violet-700 border border-violet-500/20 font-semibold">
               Pub/Sub
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 font-semibold">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-500 text-red-700 border border-red-500 font-semibold">
               Circuit Breaker
             </span>
           </div>
@@ -110,7 +110,7 @@ export default function TechPage() {
           <div className="flex items-center gap-2 mb-2">
             <Scale size={18} className="text-orange-500" />
             <h2 className="text-xl font-bold text-slate-900">Decision Rules</h2>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-semibold ml-1">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-600 text-emerald-700 border border-emerald-600 font-semibold ml-1">
               Deterministic · Auditable
             </span>
           </div>
@@ -146,7 +146,7 @@ export default function TechPage() {
             </div>
             <p className="text-slate-600 text-sm mb-4">
               Global SHAP importance from 500 held-out test listings.&nbsp;
-              <span className="text-emerald-400">Green</span> = increases price ·&nbsp;
+              <span className="text-emerald-700">Green</span> = increases price ·&nbsp;
               <span className="text-orange-500">Blue</span> = decreases price
             </p>
 
@@ -184,24 +184,24 @@ export default function TechPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+              <div className="bg-emerald-600 border border-emerald-600 rounded-xl p-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Zap size={13} className="text-emerald-400" />
-                  <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Predicts well</p>
+                  <Zap size={13} className="text-emerald-700" />
+                  <p className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Predicts well</p>
                 </div>
-                <ul className="text-xs text-emerald-300/80 space-y-1">
+                <ul className="text-xs text-emerald-700/80 space-y-1">
                   <li>· Common makes (toyota, ford, honda, chevrolet…)</li>
                   <li>· Cars with complete odometer + year data</li>
                   <li>· Price ranges $1k – $50k</li>
                 </ul>
               </div>
 
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+              <div className="bg-amber-500 border border-amber-500 rounded-xl p-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <AlertTriangle size={13} className="text-amber-400" />
-                  <p className="text-xs font-bold text-amber-400 uppercase tracking-wide">Limitations</p>
+                  <AlertTriangle size={13} className="text-amber-700" />
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">Limitations</p>
                 </div>
-                <ul className="text-xs text-amber-300/80 space-y-1">
+                <ul className="text-xs text-amber-700/80 space-y-1">
                   <li>· Rare/luxury vehicles — limited training samples</li>
                   <li>· Condition is self-reported by sellers</li>
                   <li>· Static snapshot — real prices drift over time</li>

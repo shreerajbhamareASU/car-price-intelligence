@@ -56,31 +56,31 @@ const AGENT_ICONS = {
 // Demo vehicles — matched to CAR_CATALOG keys + static data map
 const DEMO_VEHICLES = [
   { make:'toyota',    model:'camry',    year:2020, mileage:42000, condition:'good', region:'texas',
-    tag:'MONITOR',  tagGrad:'from-amber-500 to-yellow-600',  tagText:'text-amber-300',
+    tag:'MONITOR',  tagGrad:'from-amber-500 to-yellow-600',  tagText:'text-amber-700',
     label:'Toyota Camry',    desc:'Stable demand, balanced market conditions', stat:'+0.8% / 90d', emoji:'🚗' },
   { make:'honda',     model:'civic',    year:2020, mileage:55000, condition:'good', region:'florida',
-    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-300',
+    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-700',
     label:'Honda Civic',     desc:'10% below market median — strong value pick', stat:'−10.2% vs median', emoji:'🏁' },
   { make:'ford',      model:'f-150',    year:2019, mileage:68000, condition:'good', region:'texas',
-    tag:'WAIT',     tagGrad:'from-red-500 to-rose-600',      tagText:'text-red-300',
+    tag:'WAIT',     tagGrad:'from-red-500 to-rose-600',      tagText:'text-red-700',
     label:'Ford F-150',      desc:'Truck prices softening nationally', stat:'−3.4% / 90d', emoji:'🛻' },
   { make:'jeep',      model:'wrangler', year:2020, mileage:45000, condition:'good', region:'ohio',
-    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-300',
+    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-700',
     label:'Jeep Wrangler',   desc:'Rising demand, constrained inventory', stat:'+6.8% / 90d', emoji:'⛰️' },
   { make:'bmw',       model:'3 series', year:2020, mileage:48000, condition:'good', region:'new york',
-    tag:'WAIT',     tagGrad:'from-red-500 to-rose-600',      tagText:'text-red-300',
+    tag:'WAIT',     tagGrad:'from-red-500 to-rose-600',      tagText:'text-red-700',
     label:'BMW 3 Series',    desc:'Luxury segment softening post rate hike', stat:'−2.8% / 90d', emoji:'🏎️' },
   { make:'toyota',    model:'tacoma',   year:2020, mileage:38000, condition:'good', region:'california',
-    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-300',
+    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-700',
     label:'Toyota Tacoma',   desc:'Highest resale momentum of any truck', stat:'+7.4% / 90d', emoji:'🏔️' },
   { make:'honda',     model:'accord',   year:2020, mileage:38000, condition:'good', region:'illinois',
-    tag:'MONITOR',  tagGrad:'from-amber-500 to-yellow-600',  tagText:'text-amber-300',
+    tag:'MONITOR',  tagGrad:'from-amber-500 to-yellow-600',  tagText:'text-amber-700',
     label:'Honda Accord',    desc:'Balanced supply and demand, neutral signal', stat:'+0.5% / 90d', emoji:'🛣️' },
   { make:'chevrolet', model:'malibu',   year:2019, mileage:65000, condition:'good', region:'ohio',
-    tag:'WAIT',     tagGrad:'from-red-500 to-rose-600',      tagText:'text-red-300',
+    tag:'WAIT',     tagGrad:'from-red-500 to-rose-600',      tagText:'text-red-700',
     label:'Chevy Malibu',    desc:'Sedan market declining, wait for floor', stat:'−4.2% / 90d', emoji:'📉' },
   { make:'toyota',    model:'rav4',     year:2020, mileage:35000, condition:'good', region:'california',
-    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-300',
+    tag:'BUY NOW',  tagGrad:'from-emerald-500 to-green-600', tagText:'text-emerald-700',
     label:'Toyota RAV4',     desc:'SUV demand growing, buy before it rises', stat:'+4.1% / 90d', emoji:'🚙' },
 ]
 
@@ -488,10 +488,10 @@ function AgentReasoningLog({ agentLog }) {
         const isLast   = idx === agentLog.length - 1
         const isOrch   = entry.agent === 'OrchestratorAgent'
         const statusColor = entry.status === 'ok'
-          ? 'bg-orange-500/20 text-orange-500'
+          ? 'bg-orange-600 text-orange-500'
           : entry.status === 'fallback'
-            ? 'bg-amber-500/20 text-amber-400'
-            : 'bg-red-500/20 text-red-400'
+            ? 'bg-amber-500 text-amber-700'
+            : 'bg-red-500 text-red-700'
 
         return (
           <div key={idx} className="flex gap-3">
@@ -505,9 +505,9 @@ function AgentReasoningLog({ agentLog }) {
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-semibold text-slate-900">{entry.agent}</span>
                 <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                  entry.status === 'ok' ? 'bg-emerald-500/15 text-emerald-400' :
-                  entry.status === 'fallback' ? 'bg-amber-500/15 text-amber-400' :
-                  'bg-red-500/15 text-red-400'
+                  entry.status === 'ok' ? 'bg-emerald-600 text-emerald-700' :
+                  entry.status === 'fallback' ? 'bg-amber-500 text-amber-700' :
+                  'bg-red-500 text-red-700'
                 }`}>{entry.status}</span>
               </div>
               <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{entry.message}</p>
@@ -539,12 +539,12 @@ function ScenarioPanel({ basePct, projectedPrice }) {
     ? Math.round(projectedPrice * (1 + scenario.delta / 100))
     : projectedPrice
 
-  const pctColor = adjPct > 0 ? 'text-emerald-400' : adjPct < 0 ? 'text-red-400' : 'text-slate-600'
+  const pctColor = adjPct > 0 ? 'text-emerald-700' : adjPct < 0 ? 'text-red-700' : 'text-slate-600'
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-6">
       <h3 className="text-slate-900 font-semibold mb-1 flex items-center gap-2">
-        <Zap size={15} className="text-amber-400" />
+        <Zap size={15} className="text-amber-700" />
         Scenario Simulation
       </h3>
       <p className="text-slate-500 text-xs mb-4">
@@ -557,12 +557,12 @@ function ScenarioPanel({ basePct, projectedPrice }) {
             onClick={() => setActive(active === s.key ? null : s.key)}
             className={`text-left p-3 rounded-xl border text-xs transition-all ${
               active === s.key
-                ? 'bg-orange-500/10 border-orange-500/40 text-blue-300'
+                ? 'bg-orange-600 border-orange-500/40 text-blue-300'
                 : 'bg-[#F5F0E8]/60 border-slate-200 text-slate-600 hover:border-slate-300'
             }`}>
             <div className="font-semibold mb-0.5">{s.label}</div>
             <div className="text-slate-600 text-[10px]">{s.desc}</div>
-            <div className={`text-[10px] font-bold mt-1 ${s.delta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <div className={`text-[10px] font-bold mt-1 ${s.delta > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
               {s.delta > 0 ? '+' : ''}{s.delta}%
             </div>
           </button>
@@ -848,11 +848,11 @@ export default function AnalyzePage() {
       <div className="max-w-7xl mx-auto px-6 pb-12">
 
         {error && (
-          <div className="mt-6 flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/25 rounded-xl animate-fade-in">
-            <AlertCircle size={18} className="text-red-400 mt-0.5 shrink-0" />
+          <div className="mt-6 flex items-start gap-3 p-4 bg-red-500 border border-red-500/25 rounded-xl animate-fade-in">
+            <AlertCircle size={18} className="text-red-700 mt-0.5 shrink-0" />
             <div>
-              <p className="text-red-400 font-semibold text-sm">Analysis Failed</p>
-              <p className="text-red-300/80 text-sm mt-0.5">{error}</p>
+              <p className="text-red-700 font-semibold text-sm">Analysis Failed</p>
+              <p className="text-red-700/80 text-sm mt-0.5">{error}</p>
             </div>
           </div>
         )}
@@ -932,7 +932,7 @@ export default function AnalyzePage() {
                   },
                   {
                     icon: TrendingUp, label: '90-Day Projected Price', color: projPrice
-                      ? (chg90d >= 0 ? 'text-emerald-400' : 'text-red-400')
+                      ? (chg90d >= 0 ? 'text-emerald-700' : 'text-red-700')
                       : 'text-slate-500',
                     value: projPrice
                       ? <>${projPrice.toLocaleString()}</>
@@ -950,7 +950,7 @@ export default function AnalyzePage() {
                   },
                   {
                     icon: Activity, label: 'vs Market Median', color: mktCtx
-                      ? (mktCtx.price_vs_median_pct < 0 ? 'text-emerald-400' : 'text-red-400')
+                      ? (mktCtx.price_vs_median_pct < 0 ? 'text-emerald-700' : 'text-red-700')
                       : 'text-slate-500',
                     value: mktCtx
                       ? `${mktCtx.price_vs_median_pct > 0 ? '+' : ''}${mktCtx.price_vs_median_pct}%`
@@ -981,14 +981,14 @@ export default function AnalyzePage() {
                   {forecastMethod && (
                     <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
                       forecastMethod === 'llm_blended'
-                        ? 'bg-purple-500/15 text-purple-400 border-purple-500/20'
+                        ? 'bg-purple-600 text-purple-700 border-purple-500'
                         : forecastMethod === 'prophet'
-                          ? 'bg-amber-500/15 text-amber-600 border-amber-500/20'
+                          ? 'bg-amber-500 text-amber-600 border-amber-500'
                           : forecastMethod === 'linear'
-                            ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
+                            ? 'bg-amber-500 text-amber-700 border-amber-500'
                             : forecastMethod === 'industry_default'
                               ? 'bg-slate-500/15 text-slate-600 border-slate-500/20'
-                              : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                              : 'bg-orange-600 text-orange-500 border-orange-600'
                     }`}>
                       {forecastMethod === 'llm_blended'      ? '✦ AI-Enhanced' :
                        forecastMethod === 'prophet'           ? 'Prophet Model' :
@@ -1041,11 +1041,11 @@ export default function AnalyzePage() {
                   <div className="grid grid-cols-2 gap-3 mt-4">
                     <div className="bg-[#F5F0E8]/60 rounded-lg p-3 text-center">
                       <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">30-Day Forecast</p>
-                      <p className="text-lg font-bold text-emerald-400">${Number(result.forecast_30d).toLocaleString()}</p>
+                      <p className="text-lg font-bold text-emerald-700">${Number(result.forecast_30d).toLocaleString()}</p>
                     </div>
                     <div className="bg-[#F5F0E8]/60 rounded-lg p-3 text-center">
                       <p className="text-[10px] text-slate-500 uppercase tracking-wide mb-1">90-Day Forecast</p>
-                      <p className="text-lg font-bold text-emerald-300">${Number(result.forecast_90d).toLocaleString()}</p>
+                      <p className="text-lg font-bold text-emerald-700">${Number(result.forecast_90d).toLocaleString()}</p>
                       {uncRange && (
                         <p className="text-[9px] text-slate-600 mt-0.5">
                           {uncRange.low?.toLocaleString()} – {uncRange.high?.toLocaleString()}
@@ -1081,10 +1081,10 @@ export default function AnalyzePage() {
 
                 {/* LLM key insight */}
                 {llmAnalysis?.key_insight && !llmAnalysis?.error && (
-                  <div className="bg-purple-500/8 border border-purple-500/20 rounded-lg px-4 py-2.5 mt-3 flex gap-2 items-start">
-                    <Sparkles size={11} className="text-purple-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-purple-300/90 leading-relaxed">
-                      <span className="font-semibold text-purple-400">AI Insight: </span>
+                  <div className="bg-purple-600 border border-purple-500 rounded-lg px-4 py-2.5 mt-3 flex gap-2 items-start">
+                    <Sparkles size={11} className="text-purple-700 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-purple-700/90 leading-relaxed">
+                      <span className="font-semibold text-purple-700">AI Insight: </span>
                       {llmAnalysis.key_insight}
                     </p>
                   </div>
@@ -1105,7 +1105,7 @@ export default function AnalyzePage() {
                             {f.feature.replace(/_/g, ' ')}
                           </span>
                           <span className={`text-xs font-bold
-                            ${f.direction === 'increases price' ? 'text-emerald-400' : 'text-red-400'}`}>
+                            ${f.direction === 'increases price' ? 'text-emerald-700' : 'text-red-700'}`}>
                             {f.direction === 'increases price' ? '+' : '−'}$
                             {Math.abs(f.impact) >= 100
                               ? Math.round(Math.abs(f.impact)).toLocaleString()
@@ -1152,7 +1152,7 @@ export default function AnalyzePage() {
                 <h3 className="text-slate-900 font-semibold mb-5 flex items-center gap-2">
                   <Cpu size={16} className="text-orange-500" />
                   Agent Reasoning Log
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20 font-semibold">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600 text-orange-500 border border-orange-600 font-semibold">
                     {agentLog ? agentLog.length : '—'} agents
                   </span>
                 </h3>
@@ -1184,10 +1184,10 @@ export default function AnalyzePage() {
                   </div>
                 )}
                 {biasStat && (
-                  <div className="bg-amber-500/8 border border-amber-500/20 rounded-2xl p-5">
+                  <div className="bg-amber-500 border border-amber-500 rounded-2xl p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle size={14} className="text-amber-400" />
-                      <h4 className="text-amber-300 font-semibold text-sm">Bias Statement</h4>
+                      <AlertCircle size={14} className="text-amber-700" />
+                      <h4 className="text-amber-700 font-semibold text-sm">Bias Statement</h4>
                     </div>
                     <p className="text-amber-200/70 text-xs leading-relaxed">{biasStat}</p>
                   </div>
@@ -1195,7 +1195,7 @@ export default function AnalyzePage() {
                 {ethicsDiscl && (
                   <div className="bg-white border border-slate-200 rounded-2xl p-5">
                     <div className="flex items-center gap-2 mb-2">
-                      <Shield size={14} className="text-emerald-400" />
+                      <Shield size={14} className="text-emerald-700" />
                       <h4 className="text-slate-900 font-semibold text-sm">Ethics Disclaimer</h4>
                     </div>
                     <p className="text-slate-500 text-xs leading-relaxed">{ethicsDiscl}</p>

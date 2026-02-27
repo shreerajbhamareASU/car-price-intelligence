@@ -4,28 +4,28 @@ const FEATURES = [
   {
     Icon: DollarSign,
     color: '#10b981',
-    bg: 'bg-emerald-500/10 border-emerald-500/20',
+    bg: 'bg-emerald-600 border-emerald-600',
     title: 'AI-Calculated Offer Price',
     desc: 'Get a data-backed opening offer based on market comps, listing age, regional demand, and depreciation curves — not gut feeling.',
   },
   {
     Icon: AlertTriangle,
     color: '#f59e0b',
-    bg: 'bg-amber-500/10 border-amber-500/20',
+    bg: 'bg-amber-500 border-amber-500',
     title: 'Walk-Away Threshold',
     desc: 'Know your hard limit before you walk in. Our model calculates the maximum fair price so you never overpay under pressure.',
   },
   {
     Icon: MessageSquare,
     color: '#6366f1',
-    bg: 'bg-amber-500/10 border-amber-500/20',
+    bg: 'bg-amber-500 border-amber-500',
     title: 'Negotiation Talking Points',
     desc: 'AI-generated, vehicle-specific arguments: comparable listings, days on market, seasonal trends, and known depreciation factors.',
   },
   {
     Icon: Sparkles,
     color: '#3b82f6',
-    bg: 'bg-orange-500/10 border-orange-500/20',
+    bg: 'bg-orange-600 border-orange-600',
     title: 'Counter-Offer Simulator',
     desc: 'Run through likely dealer responses and practice your counter strategy before stepping into the dealership.',
   },
@@ -44,13 +44,13 @@ export default function NegotiationHelperPage() {
 
         {/* Header */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase">
+          <div className="inline-flex items-center gap-2 bg-amber-500 border border-amber-500 text-amber-700 text-xs font-semibold px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase">
             <Clock size={13} />
             Coming Soon
           </div>
 
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-600/20 border border-orange-500/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-orange-600 border border-orange-600 flex items-center justify-center">
               <Handshake size={24} className="text-orange-500" />
             </div>
             <h1 className="text-4xl font-bold text-slate-900">Negotiation Helper</h1>
@@ -68,7 +68,7 @@ export default function NegotiationHelperPage() {
           {STEPS.map(({ step, label }, i) => (
             <div key={step} className="flex items-center gap-3">
               <div className="flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-full bg-orange-600/20 border border-orange-500/30 flex items-center justify-center text-orange-500 text-xs font-bold flex-shrink-0">
+                <span className="w-7 h-7 rounded-full bg-orange-600 border border-orange-600 flex items-center justify-center text-orange-500 text-xs font-bold flex-shrink-0">
                   {step}
                 </span>
                 <span className="text-slate-600 text-sm font-medium whitespace-nowrap">{label}</span>

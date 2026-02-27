@@ -10,7 +10,7 @@ import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tool
 const DEMO_VEHICLES = [
   {
     id: 'tesla_model3', label: 'Tesla Model 3 (2021)',
-    rec: 'WAIT', recColor: 'text-red-400', recGrad: 'from-red-500 to-rose-600',
+    rec: 'WAIT', recColor: 'text-red-700', recGrad: 'from-red-500 to-rose-600',
     confidence: 82, volatility: 'Moderate', risk: 58, change: -4.2,
     current_price: 35200, projected_price: 33722,
     unc_low: 30924, unc_high: 36420,
@@ -45,7 +45,7 @@ const DEMO_VEHICLES = [
   },
   {
     id: 'honda_civic', label: 'Honda Civic (2020)',
-    rec: 'BUY NOW', recColor: 'text-emerald-400', recGrad: 'from-emerald-500 to-green-600',
+    rec: 'BUY NOW', recColor: 'text-emerald-700', recGrad: 'from-emerald-500 to-green-600',
     confidence: 79, volatility: 'Low', risk: 22, change: +2.4,
     current_price: 22400, projected_price: 22938,
     unc_low: 22020, unc_high: 23856,
@@ -80,7 +80,7 @@ const DEMO_VEHICLES = [
   },
   {
     id: 'jeep_wrangler', label: 'Jeep Wrangler (2020)',
-    rec: 'BUY NOW', recColor: 'text-emerald-400', recGrad: 'from-emerald-500 to-green-600',
+    rec: 'BUY NOW', recColor: 'text-emerald-700', recGrad: 'from-emerald-500 to-green-600',
     confidence: 84, volatility: 'Low', risk: 18, change: +3.1,
     current_price: 38600, projected_price: 39797,
     unc_low: 38205, unc_high: 41389,
@@ -115,7 +115,7 @@ const DEMO_VEHICLES = [
   },
   {
     id: 'bmw_3series', label: 'BMW 3 Series (2019)',
-    rec: 'WAIT', recColor: 'text-red-400', recGrad: 'from-red-500 to-rose-600',
+    rec: 'WAIT', recColor: 'text-red-700', recGrad: 'from-red-500 to-rose-600',
     confidence: 78, volatility: 'High', risk: 72, change: -5.6,
     current_price: 41200, projected_price: 38896,
     unc_low: 33450, unc_high: 44342,
@@ -202,7 +202,7 @@ export default function DecisionReportPage() {
               <button key={v.id} onClick={() => setSelectedId(v.id)}
                 className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                   selectedId === v.id
-                    ? 'bg-orange-500/20 border-orange-500/40 text-blue-300'
+                    ? 'bg-orange-600 border-orange-500/40 text-blue-300'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}>
                 {v.label}
@@ -248,11 +248,11 @@ export default function DecisionReportPage() {
           <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: 'Current Fair Value',    value: `$${current_price.toLocaleString()}`,    color: 'text-slate-900' },
-              { label: '90-Day Forecast',       value: `$${projected_price.toLocaleString()}`,  color: change >= 0 ? 'text-emerald-400' : 'text-red-400' },
-              { label: 'Projected Change',      value: `${change > 0 ? '+' : ''}${change}%`,   color: change >= 0 ? 'text-emerald-400' : 'text-red-400' },
+              { label: '90-Day Forecast',       value: `$${projected_price.toLocaleString()}`,  color: change >= 0 ? 'text-emerald-700' : 'text-red-700' },
+              { label: 'Projected Change',      value: `${change > 0 ? '+' : ''}${change}%`,   color: change >= 0 ? 'text-emerald-700' : 'text-red-700' },
               { label: 'Confidence Score',      value: `${confidence}%`, color: 'text-orange-500' },
               { label: 'Volatility',            value: volatility,       color: volColor ? '' : '' },
-              { label: 'Risk Score',            value: `${risk}/100`,    color: risk < 40 ? 'text-emerald-400' : risk < 65 ? 'text-amber-400' : 'text-red-400' },
+              { label: 'Risk Score',            value: `${risk}/100`,    color: risk < 40 ? 'text-emerald-700' : risk < 65 ? 'text-amber-700' : 'text-red-700' },
               { label: 'Uncertainty Low',       value: `$${unc_low.toLocaleString()}`,          color: 'text-slate-600' },
               { label: 'Uncertainty High',      value: `$${unc_high.toLocaleString()}`,         color: 'text-slate-600' },
             ].map(m => (
@@ -289,7 +289,7 @@ export default function DecisionReportPage() {
             <div className="space-y-3">
               {reasoning.map((r, i) => (
                 <div key={i} className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <span className="text-orange-500 text-xs font-bold">{i + 1}</span>
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed">{r}</p>
@@ -301,12 +301,12 @@ export default function DecisionReportPage() {
             <div className="mt-5 bg-[#F5F0E8]/60 rounded-xl p-4">
               <p className="text-slate-500 text-xs mb-2">90-Day Price Range ({volatility} volatility)</p>
               <div className="flex items-center gap-2">
-                <span className="text-red-400 text-xs font-bold">${unc_low.toLocaleString()}</span>
+                <span className="text-red-700 text-xs font-bold">${unc_low.toLocaleString()}</span>
                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-2 rounded-full"
                     style={{ background: `linear-gradient(to right, #ef4444, #10b981)`, width: '100%' }} />
                 </div>
-                <span className="text-emerald-400 text-xs font-bold">${unc_high.toLocaleString()}</span>
+                <span className="text-emerald-700 text-xs font-bold">${unc_high.toLocaleString()}</span>
               </div>
               <p className="text-center text-slate-500 text-[10px] mt-1">Projected: ${projected_price.toLocaleString()}</p>
             </div>
@@ -315,7 +315,7 @@ export default function DecisionReportPage() {
           {/* Scenario Impact */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6">
             <h3 className="text-slate-900 font-semibold mb-4 flex items-center gap-2">
-              <Zap size={16} className="text-amber-400" />
+              <Zap size={16} className="text-amber-700" />
               Scenario Impact Analysis
             </h3>
             <div className="space-y-3">
@@ -323,7 +323,7 @@ export default function DecisionReportPage() {
                 <div key={i} className="bg-[#F5F0E8]/60 border border-slate-200 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-slate-900 font-medium text-sm">{s.name}</span>
-                    <span className={`text-xs font-bold ${s.delta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <span className={`text-xs font-bold ${s.delta > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
                       {s.delta > 0 ? '+' : ''}{s.delta}% adjustment
                     </span>
                   </div>
@@ -342,7 +342,7 @@ export default function DecisionReportPage() {
           <h3 className="text-slate-900 font-semibold mb-5 flex items-center gap-2">
             <Cpu size={16} className="text-orange-500" />
             Agent Reasoning Chain
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20 font-semibold">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600 text-orange-500 border border-orange-600 font-semibold">
               {agent_log.length} agents
             </span>
           </h3>
@@ -350,7 +350,7 @@ export default function DecisionReportPage() {
             {agent_log.map((entry, idx) => {
               const IconComp = AGENT_ICONS[entry.agent] || Activity
               const isLast   = idx === agent_log.length - 1
-              const scColor  = entry.status === 'ok' ? 'bg-orange-500/20 text-orange-500' : 'bg-amber-500/20 text-amber-400'
+              const scColor  = entry.status === 'ok' ? 'bg-orange-600 text-orange-500' : 'bg-amber-500 text-amber-700'
               return (
                 <div key={idx} className="flex gap-3">
                   <div className="flex flex-col items-center flex-shrink-0">
@@ -363,7 +363,7 @@ export default function DecisionReportPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-slate-900">{entry.agent}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                        entry.status === 'ok' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'
+                        entry.status === 'ok' ? 'bg-emerald-600 text-emerald-700' : 'bg-amber-500 text-amber-700'
                       }`}>{entry.status}</span>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-0.5">{entry.message}</p>
@@ -383,10 +383,10 @@ export default function DecisionReportPage() {
             </div>
             <p className="text-slate-600 text-xs leading-relaxed">{transparency}</p>
           </div>
-          <div className="bg-amber-500/8 border border-amber-500/20 rounded-2xl p-5">
+          <div className="bg-amber-500 border border-amber-500 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
-              <AlertCircle size={14} className="text-amber-400" />
-              <h4 className="text-amber-300 font-semibold text-sm">Bias Statement</h4>
+              <AlertCircle size={14} className="text-amber-700" />
+              <h4 className="text-amber-700 font-semibold text-sm">Bias Statement</h4>
             </div>
             <p className="text-amber-200/70 text-xs leading-relaxed">{bias}</p>
           </div>
@@ -394,7 +394,7 @@ export default function DecisionReportPage() {
 
         {/* Ethics footer */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 text-center">
-          <Shield size={18} className="text-emerald-400 mx-auto mb-2" />
+          <Shield size={18} className="text-emerald-700 mx-auto mb-2" />
           <p className="text-slate-500 text-xs max-w-2xl mx-auto">
             <span className="text-slate-600 font-semibold">Advisory Only: </span>
             Vroomly provides data-driven price intelligence for informational purposes only.

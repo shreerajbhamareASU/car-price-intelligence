@@ -12,35 +12,35 @@ const HITL_STEPS = [
     title: 'AI Generates Recommendation',
     desc: '7-agent pipeline runs XGBoost + Prophet + GPT-4o-mini to produce a BUY NOW / WAIT / MONITOR signal with confidence score, risk assessment, and reasoning.',
     badge: 'Automated',
-    badgeColor: 'bg-amber-500/15 text-amber-600',
+    badgeColor: 'bg-amber-500 text-amber-600',
   },
   {
     id: 2, Icon: Eye, color: '#3b82f6',
     title: 'Transparency Layer',
     desc: 'Every recommendation includes confidence %, volatility level, uncertainty range, forecast method label, and 3-bullet reasoning — so humans can evaluate the evidence.',
     badge: 'Transparent',
-    badgeColor: 'bg-orange-500/10 text-orange-500',
+    badgeColor: 'bg-orange-600 text-orange-500',
   },
   {
     id: 3, Icon: User, color: '#f59e0b',
     title: 'Human Reviews Evidence',
     desc: 'The buyer sees the full agent reasoning log, SHAP factors, bias statement, and scenario simulations. They can run what-if analyses before deciding.',
     badge: 'Human Review',
-    badgeColor: 'bg-amber-500/15 text-amber-400',
+    badgeColor: 'bg-amber-500 text-amber-700',
   },
   {
     id: 4, Icon: CheckCircle, color: '#10b981',
     title: 'Human Makes Final Decision',
     desc: 'AI output is advisory only. The human decides whether to act, modify the search, or seek a second opinion. No autonomous purchasing or commitment.',
     badge: 'Human Decision',
-    badgeColor: 'bg-emerald-500/15 text-emerald-400',
+    badgeColor: 'bg-emerald-600 text-emerald-700',
   },
   {
     id: 5, Icon: RefreshCw, color: '#8b5cf6',
     title: 'Feedback Loop',
     desc: 'Users can flag incorrect recommendations. This feedback improves future model calibration and helps identify regional data gaps or systematic biases.',
     badge: 'Continuous Learning',
-    badgeColor: 'bg-purple-500/15 text-purple-400',
+    badgeColor: 'bg-purple-600 text-purple-700',
   },
 ]
 
@@ -138,12 +138,12 @@ export default function PrincipledAIPage() {
       {/* ── Hero ── */}
       <div className="bg-gradient-to-b from-slate-100 to-[#F5F0E8] border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-widest mb-3">
+          <div className="flex items-center gap-2 text-emerald-700 text-xs font-semibold uppercase tracking-widest mb-3">
             <Shield size={12} />
             Principled AI · Responsible AI Spark Challenge
           </div>
           <h1 className="text-4xl font-extrabold text-slate-900 mb-2">
-            Responsible <span className="text-emerald-400">AI Design</span>
+            Responsible <span className="text-emerald-700">AI Design</span>
           </h1>
           <p className="text-slate-600 text-base max-w-2xl">
             Vroomly is built on four pillars of responsible AI: Transparency, Accountability, Fairness, and Privacy.
@@ -153,10 +153,10 @@ export default function PrincipledAIPage() {
           {/* Quick stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
             {[
-              { label: 'Protected Attributes Used', value: '0', color: 'text-emerald-400', icon: Shield },
+              { label: 'Protected Attributes Used', value: '0', color: 'text-emerald-700', icon: Shield },
               { label: 'Confidence Score Displayed', value: '100%', color: 'text-orange-500', icon: Eye },
-              { label: 'Audit Trail Steps', value: '9', color: 'text-purple-400', icon: FileText },
-              { label: 'Advisory Only', value: '✓', color: 'text-amber-400', icon: Scale },
+              { label: 'Audit Trail Steps', value: '9', color: 'text-purple-700', icon: FileText },
+              { label: 'Advisory Only', value: '✓', color: 'text-amber-700', icon: Scale },
             ].map(({ label, value, color, icon: Icon }) => (
               <div key={label} className="bg-white/80 border border-slate-200 rounded-2xl p-4 text-center">
                 <Icon size={18} className={`${color} mx-auto mb-2`} />
@@ -173,7 +173,7 @@ export default function PrincipledAIPage() {
         {/* ── Human-in-the-Loop animated flow ── */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <User size={18} className="text-amber-400" />
+            <User size={18} className="text-amber-700" />
             <h2 className="text-xl font-bold text-slate-900">Human-in-the-Loop Architecture</h2>
           </div>
           <p className="text-slate-600 text-sm mb-6">
@@ -252,7 +252,7 @@ export default function PrincipledAIPage() {
         {/* ── Interactive AI Review Demo ── */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <Zap size={18} className="text-amber-400" />
+            <Zap size={18} className="text-amber-700" />
             <h2 className="text-xl font-bold text-slate-900">Interactive: Review an AI Decision</h2>
           </div>
           <p className="text-slate-600 text-sm mb-6">
@@ -267,7 +267,7 @@ export default function PrincipledAIPage() {
               <div className="flex items-center gap-2 mb-4">
                 <Bot size={16} className="text-amber-600" />
                 <span className="text-sm font-semibold text-amber-600">AI Agent Output</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 border border-amber-500/20">Advisory Only</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500 text-amber-600 border border-amber-500">Advisory Only</span>
               </div>
 
               <div className="flex items-start justify-between mb-4">
@@ -283,8 +283,8 @@ export default function PrincipledAIPage() {
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {[
                   { label: 'Confidence', value: `${DEMO_RESULT.confidence}%`, color: 'text-orange-500' },
-                  { label: '90-Day Change', value: DEMO_RESULT.change, color: 'text-emerald-400' },
-                  { label: 'Risk Score', value: DEMO_RESULT.risk + '/100', color: 'text-emerald-400' },
+                  { label: '90-Day Change', value: DEMO_RESULT.change, color: 'text-emerald-700' },
+                  { label: 'Risk Score', value: DEMO_RESULT.risk + '/100', color: 'text-emerald-700' },
                 ].map(m => (
                   <div key={m.label} className="bg-white rounded-lg p-3 text-center">
                     <p className={`text-xl font-bold ${m.color}`}>{m.value}</p>
@@ -302,19 +302,19 @@ export default function PrincipledAIPage() {
                 ))}
               </div>
 
-              <div className="bg-amber-500/8 border border-amber-500/20 rounded-lg p-3">
-                <p className="text-amber-300/80 text-xs">
-                  <span className="font-semibold text-amber-400">Bias note: </span>
+              <div className="bg-amber-500 border border-amber-500 rounded-lg p-3">
+                <p className="text-amber-700/80 text-xs">
+                  <span className="font-semibold text-amber-700">Bias note: </span>
                   {DEMO_RESULT.bias}
                 </p>
               </div>
             </div>
 
             {/* Human Decision Panel */}
-            <div className="bg-[#F5F0E8]/60 border border-amber-500/20 rounded-2xl p-5">
+            <div className="bg-[#F5F0E8]/60 border border-amber-500 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-4">
-                <User size={16} className="text-amber-400" />
-                <span className="text-sm font-semibold text-amber-400">Your Decision</span>
+                <User size={16} className="text-amber-700" />
+                <span className="text-sm font-semibold text-amber-700">Your Decision</span>
               </div>
 
               <p className="text-slate-600 text-xs mb-4">
@@ -342,7 +342,7 @@ export default function PrincipledAIPage() {
               </div>
 
               {reviewDecision && (
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-xs text-emerald-300">
+                <div className="bg-emerald-600 border border-emerald-600 rounded-lg p-3 text-xs text-emerald-700">
                   {reviewDecision === 'accept' && 'You accepted the AI recommendation. Remember: this is your decision, not the AI\'s.'}
                   {reviewDecision === 'more' && 'Good choice. Explore the scenario simulator or compare regional prices before deciding.'}
                   {reviewDecision === 'wait' && 'You\'ve overridden the AI. Human judgment prevails — the AI was advisory only.'}
@@ -361,10 +361,10 @@ export default function PrincipledAIPage() {
                 <div className="mt-3 space-y-2">
                   <p className="text-xs text-slate-500">Rate the AI recommendation quality:</p>
                   <div className="flex gap-2">
-                    <button className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-emerald-500/15 text-emerald-400 text-xs hover:bg-emerald-500/25 transition-colors">
+                    <button className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-emerald-600 text-emerald-700 text-xs hover:bg-emerald-600 transition-colors">
                       <ThumbsUp size={12} /> Helpful
                     </button>
-                    <button className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-red-500/15 text-red-400 text-xs hover:bg-red-500/25 transition-colors">
+                    <button className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-red-500 text-red-700 text-xs hover:bg-red-500 transition-colors">
                       <ThumbsDown size={12} /> Not helpful
                     </button>
                   </div>
@@ -401,7 +401,7 @@ export default function PrincipledAIPage() {
         {/* ── Fairness: What We Don't Use ── */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <Scale size={18} className="text-emerald-400" />
+            <Scale size={18} className="text-emerald-700" />
             <h2 className="text-xl font-bold text-slate-900">Fairness: Feature Audit</h2>
           </div>
           <p className="text-slate-600 text-sm mb-5">
@@ -422,8 +422,8 @@ export default function PrincipledAIPage() {
                     <td className="py-2.5 text-slate-700">{row.feature}</td>
                     <td className="py-2.5 text-center">
                       {row.used
-                        ? <span className="inline-flex items-center gap-1 text-emerald-400 text-xs font-semibold"><CheckCircle size={12} /> Yes</span>
-                        : <span className="inline-flex items-center gap-1 text-red-400 text-xs font-semibold"><AlertCircle size={12} /> No</span>
+                        ? <span className="inline-flex items-center gap-1 text-emerald-700 text-xs font-semibold"><CheckCircle size={12} /> Yes</span>
+                        : <span className="inline-flex items-center gap-1 text-red-700 text-xs font-semibold"><AlertCircle size={12} /> No</span>
                       }
                     </td>
                     <td className="py-2.5 text-slate-500 text-xs">{row.reason}</td>
@@ -435,8 +435,8 @@ export default function PrincipledAIPage() {
         </div>
 
         {/* ── Ethics disclaimer banner ── */}
-        <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 border border-emerald-500/20 rounded-2xl p-6 text-center">
-          <Shield size={24} className="text-emerald-400 mx-auto mb-3" />
+        <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 border border-emerald-600 rounded-2xl p-6 text-center">
+          <Shield size={24} className="text-emerald-700 mx-auto mb-3" />
           <h3 className="text-slate-900 font-bold text-lg mb-2">AI Recommendations Are Advisory Only</h3>
           <p className="text-slate-600 text-sm max-w-2xl mx-auto">
             Vroomly provides data-driven price intelligence for informational purposes only.

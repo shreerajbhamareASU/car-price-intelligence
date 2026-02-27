@@ -77,12 +77,12 @@ export default function EconomicImpactPage() {
       {/* ── Hero ── */}
       <div className="bg-gradient-to-b from-slate-100 to-[#F5F0E8] border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold uppercase tracking-widest mb-3">
+          <div className="flex items-center gap-2 text-amber-700 text-xs font-semibold uppercase tracking-widest mb-3">
             <Globe size={12} />
             Economic Impact · Principled AI Spark Challenge
           </div>
           <h1 className="text-4xl font-extrabold text-slate-900 mb-2">
-            Economic <span className="text-amber-400">Impact</span>
+            Economic <span className="text-amber-700">Impact</span>
           </h1>
           <p className="text-slate-600 text-base max-w-2xl">
             Vroomly reduces information asymmetry in the $841 billion US used car market —
@@ -92,10 +92,10 @@ export default function EconomicImpactPage() {
           {/* Hero stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
             {[
-              { label: 'Avg buyer overpay (without AI)', value: '$1,900', sub: 'per transaction', color: 'text-red-400', icon: ArrowUp },
-              { label: 'Avg savings with Vroomly',      value: '$1,410', sub: 'per transaction', color: 'text-emerald-400', icon: ArrowDown },
+              { label: 'Avg buyer overpay (without AI)', value: '$1,900', sub: 'per transaction', color: 'text-red-700', icon: ArrowUp },
+              { label: 'Avg savings with Vroomly',      value: '$1,410', sub: 'per transaction', color: 'text-emerald-700', icon: ArrowDown },
               { label: 'US used car market size',        value: '$841B',  sub: 'annual market', color: 'text-orange-500',    icon: BarChart2 },
-              { label: 'Price efficiency improvement',   value: '+16%',   sub: 'vs no-AI baseline', color: 'text-purple-400', icon: TrendingUp },
+              { label: 'Price efficiency improvement',   value: '+16%',   sub: 'vs no-AI baseline', color: 'text-purple-700', icon: TrendingUp },
             ].map(({ label, value, sub, color, icon: Icon }) => (
               <div key={label} className="bg-white/80 border border-slate-200 rounded-2xl p-4">
                 <Icon size={18} className={`${color} mb-2`} />
@@ -171,17 +171,17 @@ export default function EconomicImpactPage() {
                 <p className="text-slate-600 text-xs font-medium mb-3">{row.group}</p>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-red-400 text-xs text-slate-600">Without AI</p>
-                    <p className="text-red-400 font-bold">${row.avg_overpay.toLocaleString()}</p>
+                    <p className="text-red-700 text-xs text-slate-600">Without AI</p>
+                    <p className="text-red-700 font-bold">${row.avg_overpay.toLocaleString()}</p>
                     <p className="text-slate-600 text-[10px]">avg overpay</p>
                   </div>
                   <div className="border-t border-slate-200 pt-2">
-                    <p className="text-emerald-400 text-xs">With Vroomly</p>
-                    <p className="text-emerald-400 font-bold">${row.with_ai.toLocaleString()}</p>
+                    <p className="text-emerald-700 text-xs">With Vroomly</p>
+                    <p className="text-emerald-700 font-bold">${row.with_ai.toLocaleString()}</p>
                     <p className="text-slate-600 text-[10px]">avg overpay</p>
                   </div>
-                  <div className="bg-emerald-500/10 rounded-lg p-2">
-                    <p className="text-emerald-300 font-black">-${row.savings.toLocaleString()}</p>
+                  <div className="bg-emerald-600 rounded-lg p-2">
+                    <p className="text-emerald-700 font-black">-${row.savings.toLocaleString()}</p>
                     <p className="text-emerald-600 text-[10px]">savings/transaction</p>
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export default function EconomicImpactPage() {
                       <p className="text-slate-900 font-semibold mb-1">{s.segment} Segment</p>
                       <p className="text-slate-600 text-xs">
                         ${s.total_market}B annual market · AI price intelligence could improve pricing efficiency by {s.efficiency_gain}%,
-                        representing <span className="text-emerald-400 font-bold">${(s.total_market * s.efficiency_gain / 100).toFixed(1)}B</span> in
+                        representing <span className="text-emerald-700 font-bold">${(s.total_market * s.efficiency_gain / 100).toFixed(1)}B</span> in
                         annual consumer surplus recovery.
                       </p>
                     </div>
@@ -259,7 +259,7 @@ export default function EconomicImpactPage() {
         {/* ── Scale Calculator ── */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-2">
-            <Zap size={18} className="text-amber-400" />
+            <Zap size={18} className="text-amber-700" />
             <h2 className="text-slate-900 font-bold text-lg">Scale Impact Calculator</h2>
           </div>
           <p className="text-slate-600 text-sm mb-5">
@@ -271,7 +271,7 @@ export default function EconomicImpactPage() {
               <button key={i} onClick={() => setScaleTier(i)}
                 className={`p-4 rounded-xl border text-left transition-all ${
                   scaleTier === i
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                    ? 'bg-amber-500 border-amber-500/40 text-amber-700'
                     : 'bg-[#F5F0E8]/60 border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}>
                 <p className="text-xs font-medium mb-1">{s.label}</p>
@@ -282,9 +282,9 @@ export default function EconomicImpactPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { label: 'Annual Consumer Savings', value: `$${MULTIPLIER_SCENARIOS[scaleTier].annual_savings}`, color: 'text-emerald-400', desc: 'Direct buyer savings from better price discovery' },
+              { label: 'Annual Consumer Savings', value: `$${MULTIPLIER_SCENARIOS[scaleTier].annual_savings}`, color: 'text-emerald-700', desc: 'Direct buyer savings from better price discovery' },
               { label: 'GDP Efficiency Effect', value: `$${MULTIPLIER_SCENARIOS[scaleTier].gdp_effect}`, color: 'text-orange-500', desc: 'Multiplier effect from reduced transaction friction (3x)' },
-              { label: 'Market Segments Impacted', value: '6', color: 'text-purple-400', desc: 'Sedans, SUVs, Trucks, EVs, Compact, Luxury' },
+              { label: 'Market Segments Impacted', value: '6', color: 'text-purple-700', desc: 'Sedans, SUVs, Trucks, EVs, Compact, Luxury' },
             ].map(m => (
               <div key={m.label} className="bg-[#F5F0E8]/60 border border-slate-200 rounded-xl p-4">
                 <p className="text-slate-500 text-xs mb-1">{m.label}</p>

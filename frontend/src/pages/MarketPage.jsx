@@ -71,11 +71,11 @@ function seasonColor(value, min, max) {
 function ForecastBadge({ method }) {
   if (!method) return null
   const cfg = {
-    llm_blended:      { label: 'AI Enhanced', cls: 'bg-purple-500/15 text-purple-400 border-purple-500/20' },
-    statistical:      { label: 'Statistical',  cls: 'bg-orange-500/10   text-orange-500   border-orange-500/20'   },
-    prophet:          { label: 'Prophet',      cls: 'bg-amber-500/15 text-amber-600 border-amber-500/20' },
-    linear:           { label: 'Extrapolated', cls: 'bg-amber-500/15  text-amber-400  border-amber-500/20'  },
-    market_avg:       { label: 'Market Avg',   cls: 'bg-cyan-500/15   text-cyan-400   border-cyan-500/20'   },
+    llm_blended:      { label: 'AI Enhanced', cls: 'bg-purple-600 text-purple-700 border-purple-500' },
+    statistical:      { label: 'Statistical',  cls: 'bg-orange-600   text-orange-500   border-orange-600'   },
+    prophet:          { label: 'Prophet',      cls: 'bg-amber-500 text-amber-600 border-amber-500' },
+    linear:           { label: 'Extrapolated', cls: 'bg-amber-500  text-amber-700  border-amber-500'  },
+    market_avg:       { label: 'Market Avg',   cls: 'bg-cyan-600   text-cyan-700   border-cyan-500/20'   },
     industry_default: { label: 'Industry Est', cls: 'bg-slate-500/15  text-slate-600  border-slate-500/20'  },
   }
   const { label, cls } = cfg[method] || { label: method, cls: 'bg-slate-500/15 text-slate-600 border-slate-500/20' }
@@ -351,7 +351,7 @@ function StatePlayground({ initialState }) {
               return (
                 <div key={m.make}
                   className={`rounded-xl border p-4 transition-all cursor-pointer
-                    ${selMake === m.make ? 'border-orange-500/50 bg-orange-600/8' : 'border-slate-200/80 bg-[#F5F0E8]/40'}
+                    ${selMake === m.make ? 'border-orange-500/50 bg-orange-600' : 'border-slate-200/80 bg-[#F5F0E8]/40'}
                     ${isFiltered ? 'opacity-30' : ''}`}
                   onClick={() => setSelMake(selMake === m.make ? '' : m.make)}
                 >
@@ -434,11 +434,11 @@ export default function MarketPage() {
 
   if (error) return (
     <div className="pt-8 max-w-7xl mx-auto px-6">
-      <div className="flex items-start gap-3 p-5 bg-red-500/10 border border-red-500/25 rounded-2xl">
-        <AlertCircle size={18} className="text-red-400 mt-0.5 shrink-0" />
+      <div className="flex items-start gap-3 p-5 bg-red-500 border border-red-500/25 rounded-2xl">
+        <AlertCircle size={18} className="text-red-700 mt-0.5 shrink-0" />
         <div>
-          <p className="text-red-400 font-semibold">Failed to load market data</p>
-          <p className="text-red-300/70 text-sm mt-1">{error}</p>
+          <p className="text-red-700 font-semibold">Failed to load market data</p>
+          <p className="text-red-700/70 text-sm mt-1">{error}</p>
         </div>
       </div>
     </div>
@@ -453,7 +453,7 @@ export default function MarketPage() {
   const heatScore  = Math.min(100, Math.max(0, Math.round(50 + momClamped * 3)))
   const isHot      = heatScore > 65
   const isCool     = heatScore < 35
-  const heatColor  = isHot ? 'text-red-400' : isCool ? 'text-orange-500' : 'text-amber-400'
+  const heatColor  = isHot ? 'text-red-700' : isCool ? 'text-orange-500' : 'text-amber-700'
   const heatBarClr = isHot ? 'bg-red-500'   : isCool ? 'bg-orange-600'   : 'bg-amber-500'
   const heatLabel  = isHot ? "Hot — seller's market" : isCool ? "Cool — buyer's market" : "Balanced market"
   const hasSeedData = data.top_buys?.some(b => b.is_seed)
@@ -479,7 +479,7 @@ export default function MarketPage() {
               <p className="text-slate-600 text-sm mb-1 flex items-center gap-1.5">
                 <DollarSign size={13} /> Avg Market Price
                 {data.price_source === 'predictions' && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-medium ml-1">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-emerald-700 border border-emerald-600 font-medium ml-1">
                     Live
                   </span>
                 )}
@@ -493,7 +493,7 @@ export default function MarketPage() {
                 $<AnimatedCounter end={Math.round(data.avg_price_this_month || 0)} />
               </p>
               <p className={`text-sm font-semibold mt-1.5 flex items-center gap-1
-                ${data.mom_change_pct > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                ${data.mom_change_pct > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
                 {data.mom_change_pct > 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
                 {data.mom_change_pct > 0 ? '+' : ''}{data.mom_change_pct}% vs last month
               </p>
@@ -519,7 +519,7 @@ export default function MarketPage() {
               <p className="text-slate-600 text-sm mb-1 flex items-center gap-1.5">
                 <Target size={13} /> Buy Opportunities
               </p>
-              <p className="text-4xl font-extrabold text-emerald-400">
+              <p className="text-4xl font-extrabold text-emerald-700">
                 <AnimatedCounter end={data.top_buys?.length ?? 0} />
               </p>
               <p className="text-slate-500 text-xs mt-1.5">vehicles with active BUY signal</p>
@@ -550,7 +550,7 @@ export default function MarketPage() {
               <button
                 onClick={handleClearCache}
                 disabled={clearing || seeding}
-                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-600/40 text-red-400 hover:text-slate-900 hover:border-red-400 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-600/40 text-red-700 hover:text-slate-900 hover:border-red-400 transition-colors disabled:opacity-50"
                 title="Wipe all cached predictions and re-seed fresh data"
               >
                 <RefreshCw size={11} className={clearing ? 'animate-spin' : ''} />
@@ -591,17 +591,17 @@ export default function MarketPage() {
                     <td className="px-4 py-4 font-bold text-orange-500">
                       {row.predicted_price ? `$${Number(row.predicted_price).toLocaleString()}` : '—'}
                     </td>
-                    <td className="px-4 py-4 text-emerald-400 font-medium">
+                    <td className="px-4 py-4 text-emerald-700 font-medium">
                       {row.forecast_30d ? `$${Number(row.forecast_30d).toLocaleString()}` : '—'}
                     </td>
-                    <td className="px-4 py-4 text-emerald-300 font-medium">
+                    <td className="px-4 py-4 text-emerald-700 font-medium">
                       {row.forecast_90d ? `$${Number(row.forecast_90d).toLocaleString()}` : '—'}
                     </td>
                     <td className="px-4 py-4">
                       <ForecastBadge method={row.forecast_method} />
                     </td>
                     <td className="px-4 py-4">
-                      <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                      <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-600 text-emerald-700 border border-emerald-500/25">
                         BUY
                       </span>
                     </td>
@@ -632,14 +632,14 @@ export default function MarketPage() {
         {data.top_buys?.some(b => b.llm_key_insight) && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Sparkles size={16} className="text-purple-400" />
+              <Sparkles size={16} className="text-purple-700" />
               <h2 className="text-lg font-bold text-slate-900">AI Market Insights</h2>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20 font-semibold">GPT-4o-mini</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-600 text-purple-700 border border-purple-500 font-semibold">GPT-4o-mini</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {data.top_buys.filter(b => b.llm_key_insight).slice(0, 4).map((b, i) => (
                 <div key={i} className="flex gap-3 p-3 bg-[#F5F0E8]/60 rounded-xl border border-slate-200/80">
-                  <div className="w-1.5 rounded-full bg-purple-500/60 flex-shrink-0" />
+                  <div className="w-1.5 rounded-full bg-purple-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs font-semibold text-slate-900 capitalize mb-0.5">
                       {b.year} {b.make} {b.model}
@@ -683,7 +683,7 @@ export default function MarketPage() {
           <div className="flex items-start justify-between flex-wrap gap-2 mb-5">
             <div>
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <BarChart2 size={18} className="text-emerald-400" />
+                <BarChart2 size={18} className="text-emerald-700" />
                 State Market Playground
               </h2>
               <p className="text-slate-600 text-sm mt-1">
@@ -707,7 +707,7 @@ export default function MarketPage() {
           <p className="text-slate-600 text-sm mb-6">
             Average listing price by calendar month ·&nbsp;
             <span className="text-orange-500">Blue</span> = cheapest &nbsp;·&nbsp;
-            <span className="text-red-400">Red</span> = most expensive
+            <span className="text-red-700">Red</span> = most expensive
           </p>
 
           {data.seasonality_data?.length > 0 ? (

@@ -37,7 +37,7 @@ export default function Navbar() {
                 className={({ isActive }) =>
                   `flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-150 whitespace-nowrap flex-shrink-0 ${
                     isActive
-                      ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                      ? 'bg-orange-700 text-white border border-orange-600'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`
                 }

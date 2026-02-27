@@ -135,9 +135,9 @@ export default function MarketTrendsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             {[
               { label: 'Avg Used Car Price (2024)', value: '$19,644', sub: '↓ 30% from 2021 peak', color: 'text-orange-500' },
-              { label: 'MoM Change (Dec 24)',        value: '-0.8%',   sub: 'Softening demand',    color: 'text-red-400'   },
-              { label: 'Total Active Listings',      value: '4.2M',   sub: 'Nationwide inventory', color: 'text-emerald-400' },
-              { label: 'Used vs New Spread',         value: '$25.4k', sub: 'New avg: $45,000',     color: 'text-purple-400' },
+              { label: 'MoM Change (Dec 24)',        value: '-0.8%',   sub: 'Softening demand',    color: 'text-red-700'   },
+              { label: 'Total Active Listings',      value: '4.2M',   sub: 'Nationwide inventory', color: 'text-emerald-700' },
+              { label: 'Used vs New Spread',         value: '$25.4k', sub: 'New avg: $45,000',     color: 'text-purple-700' },
             ].map(({ label, value, sub, color }) => (
               <div key={label} className="bg-white/80 border border-slate-200 rounded-2xl p-4">
                 <p className={`text-2xl font-black ${color}`}>{value}</p>
@@ -167,7 +167,7 @@ export default function MarketTrendsPage() {
                 <button key={opt.key} onClick={() => setChartView(opt.key)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     chartView === opt.key
-                      ? 'bg-orange-500/20 text-orange-500 border border-orange-500/30'
+                      ? 'bg-orange-600 text-orange-500 border border-orange-600'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-600'
                   }`}>
                   {opt.label}
@@ -275,7 +275,7 @@ export default function MarketTrendsPage() {
                   <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: r.color }} />
                   <span className="text-slate-900 text-sm flex-1">{r.region}</span>
                   <span className="text-slate-600 font-bold">${r.avg.toLocaleString()}</span>
-                  <span className={`text-xs font-semibold w-12 text-right ${r.change > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  <span className={`text-xs font-semibold w-12 text-right ${r.change > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
                     {r.change > 0 ? '+' : ''}{r.change}%
                   </span>
                   <span className="text-slate-600 text-xs">{(r.listings/1000).toFixed(1)}k</span>
@@ -296,7 +296,7 @@ export default function MarketTrendsPage() {
                 <p className="text-slate-900 font-bold">{m.make}</p>
                 <p className="text-2xl font-black mt-1" style={{ color: m.color }}>{m.share}%</p>
                 <p className="text-slate-600 text-xs mt-1">${m.avg_price.toLocaleString()}</p>
-                <p className={`text-xs font-semibold mt-0.5 ${m.change > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p className={`text-xs font-semibold mt-0.5 ${m.change > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
                   {m.change > 0 ? '+' : ''}{m.change}% MoM
                 </p>
               </div>
